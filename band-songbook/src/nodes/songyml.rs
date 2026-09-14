@@ -254,8 +254,23 @@ impl GRootNode for SongYml {
         // Render the templates
         let mut handlebars = Handlebars::new();
         register_helpers(&mut handlebars);
-        let template_data =
-            serde_json::json!({"song": song_data, "sections": sections, "settings": settings});
+        // First and last bar of every Chords/Ref section, by section id
+        let bar_map = barcount_map_of_structure(&song.structure);
+        let bar_range_of = |id: &str| {
+            bar_map
+                .get(id)
+                .map(|(rows, end)| (rows.first().copied().unwrap_or(1), end - 1))
+                .unwrap_or((1, 1))
+        };
+        let bar_ranges: serde_json::Map<String, serde_json::Value> = song
+            .structure
+            .iter()
+            .map(|item| {
+                let (first, last) = bar_range_of(&item.id);
+                (item.id.clone(), serde_json::json!({"first": first, "last": last}))
+            })
+            .collect();
+        let template_data = serde_json::json!({"song": song_data, "sections": sections, "settings": settings, "bar_ranges": bar_ranges});
 
         // Render song.tikz
         let tikz_content = match handlebars.render_template(SONG_TIKZ_TEMPLATE, &template_data) {
@@ -357,16 +372,12 @@ impl GRootNode for SongYml {
         let _ = std::fs::create_dir_all(&lyrics_dir_full);
 
         // Build the lyrics_inputs content (shared by both 1col and 2col)
-        let bar_map = barcount_map_of_structure(&song.structure);
         let mut lyrics_inputs = String::new();
         for item in &song.structure {
             match &item.item {
                 SectionItem::Chords(chords) => {
                     let color = chords.color.as_deref().unwrap_or("white");
-                    let (first_bar, last_bar) = bar_map
-                        .get(&item.id)
-                        .map(|(rows, end)| (rows.first().copied().unwrap_or(1), end - 1))
-                        .unwrap_or((1, 1));
+                    let (first_bar, last_bar) = bar_range_of(&item.id);
                     lyrics_inputs.push_str(&format!(
                         "\\basecouplet{{{}}}{{ \\hfill {} \\hfill \\llap{{\\fontsize{{12pt}}{{12pt}}\\selectfont ({} $\\rightarrow$ {})}} }}{{\\input{{{}}}}}\n\n",
                         color, chords.title, first_bar, last_bar, item.id
@@ -374,10 +385,7 @@ impl GRootNode for SongYml {
                 }
                 SectionItem::Ref(ref_section) => {
                     let color = ref_section.color.as_deref().unwrap_or("white");
-                    let (first_bar, last_bar) = bar_map
-                        .get(&item.id)
-                        .map(|(rows, end)| (rows.first().copied().unwrap_or(1), end - 1))
-                        .unwrap_or((1, 1));
+                    let (first_bar, last_bar) = bar_range_of(&item.id);
                     lyrics_inputs.push_str(&format!(
                         "\\basecouplet{{{}}}{{ \\hfill {} \\hfill \\llap{{\\fontsize{{12pt}}{{12pt}}\\selectfont ({} $\\rightarrow$ {})}} }}{{\\input{{{}}}}}\n\n",
                         color, ref_section.title, first_bar, last_bar, item.id
