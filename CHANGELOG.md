@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Section headers in the song PDF show the section's first and last bar
   (`17 → 28`), right-aligned in small type.
 
+### Fixed
+
+- Chord-chart cells no longer change size from song to song. The chart is
+  scaled against a fixed two-column frame, the title and author shrink to fit
+  it, and `add.tikz` drawings no longer count toward the chart's size.
+
 ## [0.0.37]
 
 ### Fixed

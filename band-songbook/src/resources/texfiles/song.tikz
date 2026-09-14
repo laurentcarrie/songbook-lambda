@@ -37,27 +37,39 @@
     \tikzmath{\columnwidth=\xxxcolumnwidth;}
     \tikzmath{\barcount=1;}
 
-    % Song title
-    \coordinate (A) at (\xr*2+\xxxcolumnwidth/2,.5) ;
+    % Frame of a standard two-column chart. It counts for the size of the
+    % picture, so adjustbox scales every song by the same factor whatever its
+    % title, number of columns or add.tikz: cells have the same size everywhere.
+    \tikzmath{\frameleft=-\titlexoffset-1.2;}
+    \tikzmath{\frameright=\xxxcolumnwidth+4*\xr+1;}
+    \tikzmath{\framewidth=\frameright-\frameleft;}
+    \path (\frameleft, 2.8) rectangle (\frameright, 0);
+
+    % Song title and author, centered on the frame. Capped to the frame width:
+    % a long title shrinks itself rather than the whole chart.
+    \coordinate (A) at ({(\frameleft+\frameright)/2},.5) ;
     \path (A) ++(0,+1.5) coordinate(B) ;
+    % The title sits level with the BPM box, so it leaves the box's side of
+    % the frame free on both sides.
+    \tikzmath{\titlemaxwidth=\framewidth+2*\frameleft;}
     \node[anchor=center,rotate=0](b) at (A) {
-        {
+        \adjustbox{max width=\titlemaxwidth cm}{%
             \Fontskrivan\bfseries\slshape
             \fontsize{60pt}{50pt}\selectfont
             \color{blue}
-            {{{song.info.title}}}
+            {{{song.info.title}}}%
         }
     } ;
 
     % Song author
     \node[anchor=center,rotate=0](b) at (B) {
-        {%
+        \adjustbox{max width=\framewidth cm}{%
             \textcursive{
                 \bfseries%
                 \fontsize{20pt}{10pt}\selectfont%
                 \color{orange}%
                 {{{song.info.author}}}%
-            }
+            }%
         }
     } ;
 
@@ -105,8 +117,12 @@
 {{/if}}
 {{/each}}
 
-    % Song-specific drawings, from the add.tikz source beside song.yml
-    \input{add.tikz}
+    % Song-specific drawings, from the add.tikz source beside song.yml. An
+    % overlay, so they never change the size of the chart. Coordinates they
+    % name stay visible outside the scope.
+    \begin{scope}[overlay]
+        \input{add.tikz}
+    \end{scope}
 
 \end{tikzpicture}
 \end{adjustbox}
