@@ -483,21 +483,11 @@ impl GRootNode for SongYml {
         //                  matters: it carries songtempo from song.yml, so
         //                  editing the tempo has to invalidate the .midi and
         //                  the .mp3 rendered from it.
+        // Filled in below, once the mp3 render targets are known: a .ly can reach
+        // the build through files.mp3 alone, and its includes must be collected
+        // too or they never get mounted.
         let mut included_ly: Vec<PathBuf> = vec![];
         let mut included_dep: Vec<PathBuf> = vec![];
-        let from_sources = self.included_ly_of(sandbox, &ly_files);
-        for input in scanned_inputs.iter().chain(from_sources.iter()) {
-            if !input.extension().map(|e| e == "ly").unwrap_or(false) || ly_files.contains(input) {
-                continue;
-            }
-            let in_source = self.source_exists(sandbox, input);
-            if in_source && !included_ly.contains(input) {
-                included_ly.push(input.clone());
-            }
-            if (in_source || sandbox.join(input).is_file()) && !included_dep.contains(input) {
-                included_dep.push(input.clone());
-            }
-        }
 
         // Audio renders declared under `files.mp3`: <stem>.mp3 is synthesised
         // from <stem>.ly via LilyPond's MIDI output. Declaring a render does not
@@ -522,6 +512,32 @@ impl GRootNode for SongYml {
                 parent_dir.join(format!("{stem}.mp3")),
                 already_mounted,
             ));
+        }
+
+        // Roots for the \include scan: the scores of files.lilypond and \songly,
+        // plus the .ly behind every mp3 render. A song can declare a render
+        // without ever listing the .ly under files.lilypond - tears-for-fears
+        // does - and its includes would otherwise be invisible.
+        let mut scan_roots = ly_files.clone();
+        for (ly_path, _, _, _) in &render_targets {
+            if !scan_roots.contains(ly_path) {
+                scan_roots.push(ly_path.clone());
+            }
+        }
+        let from_sources = self.included_ly_of(sandbox, &scan_roots);
+        for input in scanned_inputs.iter().chain(from_sources.iter()) {
+            if !input.extension().map(|e| e == "ly").unwrap_or(false)
+                || scan_roots.contains(input)
+            {
+                continue;
+            }
+            let in_source = self.source_exists(sandbox, input);
+            if in_source && !included_ly.contains(input) {
+                included_ly.push(input.clone());
+            }
+            if (in_source || sandbox.join(input).is_file()) && !included_dep.contains(input) {
+                included_dep.push(input.clone());
+            }
         }
 
         // Create lyrics PDF paths (1-column and 2-column)
