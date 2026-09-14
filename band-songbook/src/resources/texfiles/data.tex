@@ -24,14 +24,14 @@
 
 {{#each song.structure}}
 {{#if this.item.Chords}}
-\basecouplet{ {{~this.item.Chords.color~}} }{ {{this.item.Chords.title}} }{
+\basecouplet{ {{~this.item.Chords.color~}} }{ {{this.item.Chords.title}} \hfill {\fontsize{10pt}{10pt}\selectfont {{lookup (lookup @root.bar_ranges this.id) "first"}} $\rightarrow$ {{lookup (lookup @root.bar_ranges this.id) "last"}} } }{
 \input{lyrics/{{this.id}}}
 }
 
 {{/if}}
 
 {{#if this.item.Ref}}
-\basecouplet{ {{~this.item.Ref.color~}} }{ {{this.item.Ref.title}} }{
+\basecouplet{ {{~this.item.Ref.color~}} }{ {{this.item.Ref.title}} \hfill {\fontsize{10pt}{10pt}\selectfont {{lookup (lookup @root.bar_ranges this.id) "first"}} $\rightarrow$ {{lookup (lookup @root.bar_ranges this.id) "last"}} } }{
 \input{lyrics/{{this.id}}}
 }
 {{/if}}

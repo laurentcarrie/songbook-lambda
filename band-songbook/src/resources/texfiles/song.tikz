@@ -37,27 +37,39 @@
     \tikzmath{\columnwidth=\xxxcolumnwidth;}
     \tikzmath{\barcount=1;}
 
-    % Song title
-    \coordinate (A) at (\xr*2+\xxxcolumnwidth/2,.5) ;
+    % Frame of a standard two-column chart. It counts for the size of the
+    % picture, so adjustbox scales every song by the same factor whatever its
+    % title, number of columns or add.tikz: cells have the same size everywhere.
+    \tikzmath{\frameleft=-\titlexoffset-1.2;}
+    \tikzmath{\frameright=\xxxcolumnwidth+4*\xr+1;}
+    \tikzmath{\framewidth=\frameright-\frameleft;}
+    \path (\frameleft, 2.8) rectangle (\frameright, 0);
+
+    % Song title and author, centered on the frame. Capped to the frame width:
+    % a long title shrinks itself rather than the whole chart.
+    \coordinate (A) at ({(\frameleft+\frameright)/2},.5) ;
     \path (A) ++(0,+1.5) coordinate(B) ;
+    % The title sits level with the BPM box, so it leaves the box's side of
+    % the frame free on both sides.
+    \tikzmath{\titlemaxwidth=\framewidth+2*\frameleft;}
     \node[anchor=center,rotate=0](b) at (A) {
-        {
+        \adjustbox{max width=\titlemaxwidth cm}{%
             \Fontskrivan\bfseries\slshape
             \fontsize{60pt}{50pt}\selectfont
             \color{blue}
-            {{{song.info.title}}}
+            {{{song.info.title}}}%
         }
     } ;
 
     % Song author
     \node[anchor=center,rotate=0](b) at (B) {
-        {%
+        \adjustbox{max width=\framewidth cm}{%
             \textcursive{
                 \bfseries%
                 \fontsize{20pt}{10pt}\selectfont%
                 \color{orange}%
                 {{{song.info.author}}}%
-            }
+            }%
         }
     } ;
 
@@ -76,6 +88,7 @@
     \coordinate (A2) at ($(A1) + (0, -\yr)$);
     \node[anchor=east] at (\columnleft - 0.02, \currentline - 0.85*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
 {{{bar_rects this ../this.item.Chords.color}}}
+{{{bar_coordinates this}}}
 {{#if (gt (row_multiplier this) 1)}}
     \node[anchor=west] at (\columnleft + \xr * {{number_of_bars this}} + 0.1, \currentline - 0.5*\yr) { \fontsize{10pt}{10pt}\selectfont\bfseries x{{row_multiplier this}} };
 {{/if}}
@@ -84,6 +97,7 @@
 {{/each}}
     \coordinate (B) at (\columnleft, \currentline);
     \coordinate (C) at ($(A)!0.5!(B)$);
+    \coordinate (SECTION_{{this.id}}) at ($(C) + ({{max_number_of_bars this.item.Chords.rows}}*\xr, 0)$);
     \coordinate (D) at ($(C) + (-\titlexoffset - 0.5, 0)$);
     \node[ellipse, fill={{this.item.Chords.color}}, inner sep=3pt, rotate=70] at (D) { \fontsize{12pt}{12pt}\selectfont\bfseries {{{this.item.Chords.title}}} };
     \tikzmath{\currentline = \currentline - \spacebetweensections;}
@@ -91,6 +105,8 @@
 {{#if this.item.Ref}}
     \node[anchor=east] at (\columnleft + \xr - 0.02, \currentline - 0.35*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
     \draw[draw=black, fill={{this.item.Ref.color}}] (\columnleft + \xr, \currentline) rectangle ++(2*\xr, -\yr/2) node[midway] { {{{this.item.Ref.title}}} };
+{{{ref_bar_coordinates this.item.Ref.link @root.song.structure}}}
+    \coordinate (SECTION_{{this.id}}) at (\columnleft + 3*\xr, \currentline - 0.25*\yr);
     \tikzmath{\currentline = \currentline - \yr/2;}
     \tikzmath{\currentline = \currentline - \spacebetweensections;}
     \tikzmath{\barcount = \barcount + {{ref_bar_count this.item.Ref.link @root.song.structure}};}
@@ -100,6 +116,13 @@
     \tikzmath{\currentline = \topline;}
 {{/if}}
 {{/each}}
+
+    % Song-specific drawings, from the add.tikz source beside song.yml. An
+    % overlay, so they never change the size of the chart. Coordinates they
+    % name stay visible outside the scope.
+    \begin{scope}[overlay]
+        \input{add.tikz}
+    \end{scope}
 
 \end{tikzpicture}
 \end{adjustbox}

@@ -44,6 +44,37 @@ pub fn number_of_bars_helper(
     Ok(())
 }
 
+/// Returns the number of bars of the widest row of a section
+/// Usage: {{max_number_of_bars rows}}
+pub fn max_number_of_bars_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    let rows = h
+        .param(0)
+        .and_then(|v| v.value().as_array())
+        .ok_or(RenderErrorReason::Other(
+            "missing rows parameter".to_string(),
+        ))?;
+
+    let mut max = 0;
+    for row in rows {
+        let row = row.as_str().ok_or(RenderErrorReason::Other(
+            "row is not a string".to_string(),
+        ))?;
+        let count = parse(row)
+            .map_err(|e| RenderErrorReason::Other(e.to_string()))?
+            .bars
+            .len();
+        max = max.max(count);
+    }
+    out.write(&max.to_string())?;
+    Ok(())
+}
+
 /// Returns the content of a bar at a given index
 pub fn bar_helper(
     h: &Helper,
@@ -248,6 +279,73 @@ pub fn row_multiplier_helper(
     Ok(())
 }
 
+/// Writes a TikZ coordinate `BAR_<n>` for each of `count` consecutive bars.
+/// `n` is the running `\barcount` plus the bar's offset, so the names match
+/// the bar numbers printed on the chart. `center(k)` is the TikZ point of the
+/// k-th bar.
+fn write_bar_coordinates(
+    count: usize,
+    center: impl Fn(usize) -> String,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    for k in 0..count {
+        out.write(&format!(
+            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\n",
+            center(k)
+        ))?;
+    }
+    Ok(())
+}
+
+/// Defines `BAR_<n>` at the center of each bar cell of a row. A repeated row
+/// is drawn once, so the bars of every repeat share the cells of the first.
+/// Usage: {{{bar_coordinates row}}}
+pub fn bar_coordinates_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    let input = h
+        .param(0)
+        .and_then(|v| v.value().as_str())
+        .ok_or(RenderErrorReason::Other(
+            "missing input parameter".to_string(),
+        ))?;
+
+    let parsed = parse(input).map_err(|e| RenderErrorReason::Other(e.to_string()))?;
+    let nbars = parsed.bars.len();
+    write_bar_coordinates(
+        nbars * parsed.repeat.n as usize,
+        |k| {
+            format!(
+                "\\columnleft + {}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr",
+                k % nbars
+            )
+        },
+        out,
+    )
+}
+
+/// Defines `BAR_<n>` for every bar of a Ref section, all at the center of
+/// its box.
+/// Usage: {{{ref_bar_coordinates link song.structure}}}
+pub fn ref_bar_coordinates_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    let count = ref_bar_count_of(h)?;
+    write_bar_coordinates(
+        count.max(0) as usize,
+        |_| "\\columnleft + 2*\\xr, \\currentline - 0.25*\\yr".to_string(),
+        out,
+    )
+}
+
 /// Returns the total bar count for a referenced section (by link/id)
 /// Calculates sum of (number_of_bars * repeat) for each row in the referenced Chords section
 /// Usage: {{ref_bar_count link song.structure}}
@@ -258,6 +356,12 @@ pub fn ref_bar_count_helper(
     _: &mut RenderContext,
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
+    out.write(&ref_bar_count_of(h)?.to_string())?;
+    Ok(())
+}
+
+/// Bar count of the section linked by a `link song.structure` helper call.
+fn ref_bar_count_of(h: &Helper) -> Result<i32, RenderError> {
     let link = h
         .param(0)
         .and_then(|v| v.value().as_str())
@@ -286,19 +390,21 @@ pub fn ref_bar_count_helper(
         })
         .unwrap_or(0);
 
-    out.write(&total_bars.to_string())?;
-    Ok(())
+    Ok(total_bars)
 }
 
 /// Registers all custom helpers with the handlebars instance
 pub fn register_helpers(handlebars: &mut Handlebars) {
     handlebars.register_helper("len-helper", Box::new(len_helper));
     handlebars.register_helper("number_of_bars", Box::new(number_of_bars_helper));
+    handlebars.register_helper("max_number_of_bars", Box::new(max_number_of_bars_helper));
     handlebars.register_helper("bar", Box::new(bar_helper));
     handlebars.register_helper("bar_glyph", Box::new(bar_glyph_helper));
     handlebars.register_helper("bar_rects", Box::new(bar_rects_helper));
     handlebars.register_helper("row_multiplier", Box::new(row_multiplier_helper));
     handlebars.register_helper("ref_bar_count", Box::new(ref_bar_count_helper));
+    handlebars.register_helper("bar_coordinates", Box::new(bar_coordinates_helper));
+    handlebars.register_helper("ref_bar_coordinates", Box::new(ref_bar_coordinates_helper));
 }
 
 #[cfg(test)]
@@ -316,5 +422,35 @@ mod tests {
 
         let result = handlebars.render_template(template, &data).unwrap();
         assert_eq!(result, "2");
+    }
+
+    #[test]
+    fn test_max_number_of_bars_helper() {
+        let mut handlebars = Handlebars::new();
+        register_helpers(&mut handlebars);
+
+        let template = "{{max_number_of_bars rows}}";
+        let data = serde_json::json!({"rows": ["A|B|", "A|B|C|x2", "A|"]});
+
+        let result = handlebars.render_template(template, &data).unwrap();
+        assert_eq!(result, "3");
+    }
+
+    #[test]
+    fn test_bar_coordinates_helper() {
+        let mut handlebars = Handlebars::new();
+        register_helpers(&mut handlebars);
+
+        // 2 bars repeated twice: 4 coordinates, the repeat reusing the cells
+        let template = "{{{bar_coordinates input}}}";
+        let data = serde_json::json!({"input": "A|B|x2"});
+
+        let result = handlebars.render_template(template, &data).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(lines.len(), 4);
+        for (k, cell) in [0, 1, 0, 1].into_iter().enumerate() {
+            assert!(lines[k].contains(&format!("{{\\barcount + {k}}}\\coordinate (BAR_\\barnum)")));
+            assert!(lines[k].contains(&format!("(\\columnleft + {cell}*\\xr + 0.5*\\xr,")));
+        }
     }
 }

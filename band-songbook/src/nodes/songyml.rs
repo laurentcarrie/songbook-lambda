@@ -254,8 +254,23 @@ impl GRootNode for SongYml {
         // Render the templates
         let mut handlebars = Handlebars::new();
         register_helpers(&mut handlebars);
-        let template_data =
-            serde_json::json!({"song": song_data, "sections": sections, "settings": settings});
+        // First and last bar of every Chords/Ref section, by section id
+        let bar_map = barcount_map_of_structure(&song.structure);
+        let bar_range_of = |id: &str| {
+            bar_map
+                .get(id)
+                .map(|(rows, end)| (rows.first().copied().unwrap_or(1), end - 1))
+                .unwrap_or((1, 1))
+        };
+        let bar_ranges: serde_json::Map<String, serde_json::Value> = song
+            .structure
+            .iter()
+            .map(|item| {
+                let (first, last) = bar_range_of(&item.id);
+                (item.id.clone(), serde_json::json!({"first": first, "last": last}))
+            })
+            .collect();
+        let template_data = serde_json::json!({"song": song_data, "sections": sections, "settings": settings, "bar_ranges": bar_ranges});
 
         // Render song.tikz
         let tikz_content = match handlebars.render_template(SONG_TIKZ_TEMPLATE, &template_data) {
@@ -357,16 +372,12 @@ impl GRootNode for SongYml {
         let _ = std::fs::create_dir_all(&lyrics_dir_full);
 
         // Build the lyrics_inputs content (shared by both 1col and 2col)
-        let bar_map = barcount_map_of_structure(&song.structure);
         let mut lyrics_inputs = String::new();
         for item in &song.structure {
             match &item.item {
                 SectionItem::Chords(chords) => {
                     let color = chords.color.as_deref().unwrap_or("white");
-                    let (first_bar, last_bar) = bar_map
-                        .get(&item.id)
-                        .map(|(rows, end)| (rows.first().copied().unwrap_or(1), end - 1))
-                        .unwrap_or((1, 1));
+                    let (first_bar, last_bar) = bar_range_of(&item.id);
                     lyrics_inputs.push_str(&format!(
                         "\\basecouplet{{{}}}{{ \\hfill {} \\hfill \\llap{{\\fontsize{{12pt}}{{12pt}}\\selectfont ({} $\\rightarrow$ {})}} }}{{\\input{{{}}}}}\n\n",
                         color, chords.title, first_bar, last_bar, item.id
@@ -374,10 +385,7 @@ impl GRootNode for SongYml {
                 }
                 SectionItem::Ref(ref_section) => {
                     let color = ref_section.color.as_deref().unwrap_or("white");
-                    let (first_bar, last_bar) = bar_map
-                        .get(&item.id)
-                        .map(|(rows, end)| (rows.first().copied().unwrap_or(1), end - 1))
-                        .unwrap_or((1, 1));
+                    let (first_bar, last_bar) = bar_range_of(&item.id);
                     lyrics_inputs.push_str(&format!(
                         "\\basecouplet{{{}}}{{ \\hfill {} \\hfill \\llap{{\\fontsize{{12pt}}{{12pt}}\\selectfont ({} $\\rightarrow$ {})}} }}{{\\input{{{}}}}}\n\n",
                         color, ref_section.title, first_bar, last_bar, item.id
@@ -475,21 +483,11 @@ impl GRootNode for SongYml {
         //                  matters: it carries songtempo from song.yml, so
         //                  editing the tempo has to invalidate the .midi and
         //                  the .mp3 rendered from it.
+        // Filled in below, once the mp3 render targets are known: a .ly can reach
+        // the build through files.mp3 alone, and its includes must be collected
+        // too or they never get mounted.
         let mut included_ly: Vec<PathBuf> = vec![];
         let mut included_dep: Vec<PathBuf> = vec![];
-        let from_sources = self.included_ly_of(sandbox, &ly_files);
-        for input in scanned_inputs.iter().chain(from_sources.iter()) {
-            if !input.extension().map(|e| e == "ly").unwrap_or(false) || ly_files.contains(input) {
-                continue;
-            }
-            let in_source = self.source_exists(sandbox, input);
-            if in_source && !included_ly.contains(input) {
-                included_ly.push(input.clone());
-            }
-            if (in_source || sandbox.join(input).is_file()) && !included_dep.contains(input) {
-                included_dep.push(input.clone());
-            }
-        }
 
         // Audio renders declared under `files.mp3`: <stem>.mp3 is synthesised
         // from <stem>.ly via LilyPond's MIDI output. Declaring a render does not
@@ -514,6 +512,32 @@ impl GRootNode for SongYml {
                 parent_dir.join(format!("{stem}.mp3")),
                 already_mounted,
             ));
+        }
+
+        // Roots for the \include scan: the scores of files.lilypond and \songly,
+        // plus the .ly behind every mp3 render. A song can declare a render
+        // without ever listing the .ly under files.lilypond - tears-for-fears
+        // does - and its includes would otherwise be invisible.
+        let mut scan_roots = ly_files.clone();
+        for (ly_path, _, _, _) in &render_targets {
+            if !scan_roots.contains(ly_path) {
+                scan_roots.push(ly_path.clone());
+            }
+        }
+        let from_sources = self.included_ly_of(sandbox, &scan_roots);
+        for input in scanned_inputs.iter().chain(from_sources.iter()) {
+            if !input.extension().map(|e| e == "ly").unwrap_or(false)
+                || scan_roots.contains(input)
+            {
+                continue;
+            }
+            let in_source = self.source_exists(sandbox, input);
+            if in_source && !included_ly.contains(input) {
+                included_ly.push(input.clone());
+            }
+            if (in_source || sandbox.join(input).is_file()) && !included_dep.contains(input) {
+                included_dep.push(input.clone());
+            }
         }
 
         // Create lyrics PDF paths (1-column and 2-column)

@@ -3,16 +3,27 @@ help: ## Show this help
 
 s3testpath=s3://zik-laurent/test
 
+# Drum pattern library for the strudel pages. It lives outside the repo, so the
+# targets below pass it only when it is actually there: a library that is named
+# but missing fails the build on the first pattern it cannot resolve, while no
+# library at all is a supported mode - strudel.html is written empty.
+drumsdir ?= $(HOME)/work/songbook/drums
+drumsopt = $(if $(wildcard $(drumsdir)),--drum-patterns-dir $(drumsdir))
+
 clean: ## Remove delivery and sandbox directories
 	rm -rf delivery sandbox
 
-run: ## Build songs from local test data
+install: ## Install the band-songbook binary into ~/.cargo/bin
+	cargo install --path . --bin band-songbook
+
+run: ## Build songs and books from local test data
 	cargo run --bin band-songbook -- \
-		--srcdir tests/data \
+		--songs-srcdir tests/data \
+		--books-srcdir tests/data/books \
 		--settings tests/data/settings.yml \
 		--sandbox sandbox \
 		--delivery delivery \
-		--drum-patterns-dir /Users/laurent/work/songbook/drums
+		$(drumsopt)
 
 open: ## Open strudel HTML for ca_me_vexe
 	open sandbox/songs/mademoiselle_K/ca_me_vexe/strudel.html
@@ -20,7 +31,7 @@ open: ## Open strudel HTML for ca_me_vexe
 s3: ## Build rasmus song from S3
 	aws s3 rm --recursive $(s3testpath)	
 	cargo run --bin band-songbook -- \
-		--srcdir s3://zik-laurent/songs \
+		--songs-srcdir s3://zik-laurent/songs \
 		--settings s3://zik-laurent/songs/settings.yml \
 		--sandbox sandbox \
 		--delivery $(s3testpath)/delivery \
@@ -29,7 +40,7 @@ s3: ## Build rasmus song from S3
 
 run-all: ## Build songs from local
 	cargo run --bin band-songbook -- \
-		--srcdir ../../songbook/songs \
+		--songs-srcdir ../../songbook/songs \
 		--settings ../../songbook/songs/settings.yml \
 		--sandbox sandbox \
 		--delivery delivery \

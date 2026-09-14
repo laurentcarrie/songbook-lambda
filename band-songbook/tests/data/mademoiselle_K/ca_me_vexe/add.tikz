@@ -1,0 +1,10 @@
+\path (\BAR{4}) +(1*\xr ,-.25*\xr) coordinate (A) ;
+\node[draw,ellipse,dotted,fill=red!10,opacity=1,minimum width=1.3cm,minimum height=.5cm](b) at (A)  {
+    {\songbookfont\fontsize{10pt}{10pt}\selectfont A ~ }
+} ;
+
+% Section anchors: a Chords section (refrain1) and a Ref section (refrain3)
+\draw[->,thick,blue] (\SECTION{refrain1}) ++(1.2,0) -- (\SECTION{refrain1});
+\draw[->,thick,blue] (\SECTION{refrain3}) ++(1.2,0) -- (\SECTION{refrain3});
+\draw[->,thick,green] (\SECTION{interlude}) ++(1.2,0) -- (\SECTION{interlude});
+

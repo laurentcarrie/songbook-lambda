@@ -1,15 +1,17 @@
 %% Shared LilyPond library for the whole song corpus.
 %%
-%% This is a real, versioned file - unlike macros.ly, which band-songbook
-%% generates per song and which therefore only exists under sandbox/. Songs
-%% reach it with a relative include:
+%% This copy is compiled into the band-songbook binary and written to
+%% <sandbox>/songs/songbook.ily on every build, so a corpus that never wrote
+%% one still gets the macros. A songbook.ily beside the corpus settings.yml
+%% replaces it verbatim - that is the hook for adding your own.
+%%
+%% Songs reach it with a relative include, from the generated macros.ly:
 %%
 %%     \include "../../songbook.ily"
 %%
-%% which resolves identically from songs/<artist>/<song>/ and from its sandbox
-%% mirror, because band-songbook copies this file next to settings.yml. That is
-%% what lets a .ly compile straight from songs/ in the editor with the real
-%% macros, not a stand-in.
+%% Put your own copy in the corpus if you want that to resolve from
+%% songs/<artist>/<song>/ as well as from the sandbox mirror: that is what
+%% lets a .ly compile straight from songs/ in the editor.
 %%
 %% Only per-song values belong in the generated macros.ly - songtempo.
 
@@ -40,14 +42,21 @@ myrelease =
   #})
 
 % Red tick on every beat, as a transcription guide. Takes the number of 4/4
-% bars to cover - pass the bar count of the score it sits beside. Put it in a
-% Dynamics context next to the TabStaff: a plain second Voice inside a TabStaff
-% is not a TabVoice and wrecks the tablature. Before the staff puts the marks
-% above it, after it puts them below.
+% bars to cover - pass the bar count of the score it sits beside. Odd beats (1
+% and 3) get a square, even beats (2 and 4) a cross, so the backbeat is legible
+% at a glance. Put it in a Dynamics context next to the TabStaff: a plain second
+% Voice inside a TabStaff is not a TabVoice and wrecks the tablature. Before the
+% staff puts the marks above it, after it puts them below.
 songbookBeatMarks =
 #(define-music-function (bars) (integer?)
-   (let ((n (* 4 bars)))
-     #{ \repeat unfold $n { s4^\markup { \with-color #red \bold "▮" } } #}))
+   #{
+     \repeat unfold $bars {
+       s4^\markup { \with-color #red \bold "▮" }
+       s4^\markup { \with-color #red \bold "✖" }
+       s4^\markup { \with-color #red \bold "▮" }
+       s4^\markup { \with-color #red \bold "✖" }
+     }
+   #})
 
 % Basic backbeat: bass drum on 1 and 3, snare on 2 and 4, hi-hat on every
 % eighth. Takes the number of 4/4 bars. Two voices, because the hi-hat runs

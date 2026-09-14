@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.38]
+
+### Added
+
+- Every song has an `add.tikz` beside `song.yml`: TikZ drawings mounted into
+  the sandbox and inserted at the end of the chord chart. The file is required.
+- The chord chart defines a coordinate `BAR_<n>` at the center of every bar;
+  `\BAR{n}` names it, e.g. `\path (\BAR{4}) ...`. Repeated rows reuse the
+  cells of their first pass, and a Ref section's bars sit at the center of its
+  box.
+- The chord chart defines a coordinate `SECTION_<id>` for every section, on
+  the right edge of its bar grid and halfway down it; `\SECTION{id}` names it.
+
+### Changed
+
+- Section headers in the song PDF show the section's first and last bar
+  (`17 → 28`), right-aligned in small type.
+
+### Fixed
+
+- Chord-chart cells no longer change size from song to song. The chart is
+  scaled against a fixed two-column frame, the title and author shrink to fit
+  it, and `add.tikz` drawings no longer count toward the chart's size.
+- The `\include`s of a `.ly` reached only through `files.mp3` (not listed
+  under `files.lilypond`) were never mounted, so its MIDI render failed.
+- `songbook.ily` is compiled into the binary and always installed in the
+  sandbox, so a corpus without its own copy still gets the macros. A
+  `songbook.ily` beside the corpus `settings.yml` replaces it.
+- `songbookBeatMarks` marks beats 1 and 3 with a square and 2 and 4 with a
+  cross.
+- `make install` installs the binary; `make run` passes the drum pattern
+  library only when it exists.
+
 ## [0.0.37]
 
 ### Fixed

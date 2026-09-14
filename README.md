@@ -84,6 +84,7 @@ songs/
     song_title/
       song.yml        # Song definition
       body.tex        # Main content template
+      add.tikz        # Extra TikZ drawings, appended to the chord chart
       lyrics/
         intro.tex     # Lyrics for intro section
         verse1.tex    # Lyrics for verse1 section
