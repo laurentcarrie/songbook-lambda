@@ -85,6 +85,7 @@
 {{/each}}
     \coordinate (B) at (\columnleft, \currentline);
     \coordinate (C) at ($(A)!0.5!(B)$);
+    \coordinate (SECTION_{{this.id}}) at ($(C) + ({{max_number_of_bars this.item.Chords.rows}}*\xr, 0)$);
     \coordinate (D) at ($(C) + (-\titlexoffset - 0.5, 0)$);
     \node[ellipse, fill={{this.item.Chords.color}}, inner sep=3pt, rotate=70] at (D) { \fontsize{12pt}{12pt}\selectfont\bfseries {{{this.item.Chords.title}}} };
     \tikzmath{\currentline = \currentline - \spacebetweensections;}
@@ -93,6 +94,7 @@
     \node[anchor=east] at (\columnleft + \xr - 0.02, \currentline - 0.35*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
     \draw[draw=black, fill={{this.item.Ref.color}}] (\columnleft + \xr, \currentline) rectangle ++(2*\xr, -\yr/2) node[midway] { {{{this.item.Ref.title}}} };
 {{{ref_bar_coordinates this.item.Ref.link @root.song.structure}}}
+    \coordinate (SECTION_{{this.id}}) at (\columnleft + 3*\xr, \currentline - 0.25*\yr);
     \tikzmath{\currentline = \currentline - \yr/2;}
     \tikzmath{\currentline = \currentline - \spacebetweensections;}
     \tikzmath{\barcount = \barcount + {{ref_bar_count this.item.Ref.link @root.song.structure}};}

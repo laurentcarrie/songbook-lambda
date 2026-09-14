@@ -44,6 +44,37 @@ pub fn number_of_bars_helper(
     Ok(())
 }
 
+/// Returns the number of bars of the widest row of a section
+/// Usage: {{max_number_of_bars rows}}
+pub fn max_number_of_bars_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    let rows = h
+        .param(0)
+        .and_then(|v| v.value().as_array())
+        .ok_or(RenderErrorReason::Other(
+            "missing rows parameter".to_string(),
+        ))?;
+
+    let mut max = 0;
+    for row in rows {
+        let row = row.as_str().ok_or(RenderErrorReason::Other(
+            "row is not a string".to_string(),
+        ))?;
+        let count = parse(row)
+            .map_err(|e| RenderErrorReason::Other(e.to_string()))?
+            .bars
+            .len();
+        max = max.max(count);
+    }
+    out.write(&max.to_string())?;
+    Ok(())
+}
+
 /// Returns the content of a bar at a given index
 pub fn bar_helper(
     h: &Helper,
@@ -366,6 +397,7 @@ fn ref_bar_count_of(h: &Helper) -> Result<i32, RenderError> {
 pub fn register_helpers(handlebars: &mut Handlebars) {
     handlebars.register_helper("len-helper", Box::new(len_helper));
     handlebars.register_helper("number_of_bars", Box::new(number_of_bars_helper));
+    handlebars.register_helper("max_number_of_bars", Box::new(max_number_of_bars_helper));
     handlebars.register_helper("bar", Box::new(bar_helper));
     handlebars.register_helper("bar_glyph", Box::new(bar_glyph_helper));
     handlebars.register_helper("bar_rects", Box::new(bar_rects_helper));
@@ -390,6 +422,18 @@ mod tests {
 
         let result = handlebars.render_template(template, &data).unwrap();
         assert_eq!(result, "2");
+    }
+
+    #[test]
+    fn test_max_number_of_bars_helper() {
+        let mut handlebars = Handlebars::new();
+        register_helpers(&mut handlebars);
+
+        let template = "{{max_number_of_bars rows}}";
+        let data = serde_json::json!({"rows": ["A|B|", "A|B|C|x2", "A|"]});
+
+        let result = handlebars.render_template(template, &data).unwrap();
+        assert_eq!(result, "3");
     }
 
     #[test]

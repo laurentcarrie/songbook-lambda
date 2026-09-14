@@ -101,6 +101,11 @@
 % works too. song.tikz defines one BAR_<n> coordinate per bar.
 \newcommand*{\BAR}[1]{BAR_\the\numexpr#1\relax}
 
+% Name of the chord-chart coordinate of section #1 (its id in song.yml), for
+% add.tikz: \path (\SECTION{refrain1}) ... It sits on the right edge of the
+% section's bar grid, halfway down the section.
+\newcommand*{\SECTION}[1]{SECTION_#1}
+
 \newcommand{\basecouplet}[3]{
 	\vspace{6pt}
 	\fcolorbox{gray}{#1}{\parbox{\dimexpr\columnwidth-2\fboxsep-2\fboxrule}{
