@@ -30,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chord-chart cells no longer change size from song to song. The chart is
   scaled against a fixed two-column frame, the title and author shrink to fit
   it, and `add.tikz` drawings no longer count toward the chart's size.
+- The `\include`s of a `.ly` reached only through `files.mp3` (not listed
+  under `files.lilypond`) were never mounted, so its MIDI render failed.
+- `songbook.ily` is compiled into the binary and always installed in the
+  sandbox, so a corpus without its own copy still gets the macros. A
+  `songbook.ily` beside the corpus `settings.yml` replaces it.
+- `songbookBeatMarks` marks beats 1 and 3 with a square and 2 and 4 with a
+  cross.
+- `make install` installs the binary; `make run` passes the drum pattern
+  library only when it exists.
 
 ## [0.0.37]
 

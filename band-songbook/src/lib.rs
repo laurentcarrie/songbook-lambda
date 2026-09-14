@@ -134,6 +134,37 @@ pub fn tags_of_world(world: &World) -> Vec<String> {
     tags
 }
 
+/// The corpus-wide LilyPond library, compiled into the binary.
+///
+/// The generated macros.ly ends with `\include "../../songbook.ily"` for every
+/// song, so this file has to exist in the sandbox or lilypond dies with "file
+/// not found" on the very first score. A `cargo install` ships no data files,
+/// which is why the default travels inside the binary rather than on disk.
+const DEFAULT_SONGBOOK_ILY: &str = include_str!("resources/lyfiles/songbook.ily");
+
+/// Puts songbook.ily in the songs sandbox: the corpus copy when the sources
+/// carry one, the shipped default otherwise.
+///
+/// A corpus copy sits beside settings.yml, so `\include "../../songbook.ily"`
+/// resolves to the same content from songs/<artist>/<song>/ as from the sandbox
+/// mirror - that is what lets a .ly compile straight from the sources in the
+/// editor with the real macros rather than a stand-in. Without one, only the
+/// sandbox path resolves, and it resolves to this default.
+pub fn install_songbook_library(songs_srcdir: &Path, songs_sandbox: &Path) -> bool {
+    let dest = songs_sandbox.join("songbook.ily");
+    let src = songs_srcdir.join("songbook.ily");
+    let written = if src.is_file() {
+        std::fs::copy(&src, &dest).map(|_| ())
+    } else {
+        std::fs::write(&dest, DEFAULT_SONGBOOK_ILY)
+    };
+    if let Err(e) = written {
+        log::error!("Failed to install songbook.ily in sandbox: {e}");
+        return false;
+    }
+    true
+}
+
 /// Builds every song of the world, and every book that collates them.
 /// Returns (success, graph) where success is true if all builds succeeded.
 /// If settings_path is provided, it will be copied to sandbox/settings.yml.
@@ -176,21 +207,7 @@ pub fn make_all(
         }
     }
 
-    // songbook.ily is the corpus-wide LilyPond library: a real versioned file
-    // beside settings.yml, unlike the generated macros.ly. Mirroring it here
-    // means `\include "../../songbook.ily"` resolves to the same content from
-    // songs/<artist>/<song>/ and from its sandbox copy - so a .ly compiles in
-    // the editor with the real macros rather than a stand-in. Absent is fine:
-    // a corpus that does not use the library simply never includes it.
-    {
-        let src = songs_srcdir.join("songbook.ily");
-        if src.is_file() {
-            let dest = songs_sandbox.join("songbook.ily");
-            if let Err(e) = std::fs::copy(&src, &dest) {
-                log::error!("Failed to copy songbook.ily to sandbox: {e}");
-            }
-        }
-    }
+    install_songbook_library(songs_srcdir, &songs_sandbox);
 
     if world.items.is_empty() && world.books.is_empty() {
         return (true, g);

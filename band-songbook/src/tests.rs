@@ -1,7 +1,7 @@
 use crate::chords::parse::parse;
 use crate::model::{BookItem, Song, WorldItem};
-use crate::nodes::{ClickDef, ClickYml, LilypondFile, PdfFile, SongYml, TexFile};
-use crate::{books_of_srcdir, discover, discover_books};
+use crate::nodes::{ClickDef, ClickYml, PdfFile, SongYml, TexFile};
+use crate::{books_of_srcdir, discover, discover_books, install_songbook_library};
 use crate::{make_all, world_of_srcdir};
 use std::path::{Path, PathBuf};
 use yamake::model::{G, GNode};
@@ -82,10 +82,13 @@ fn test_yamake_build_song_with_lilypond() {
     let _ = g.add_root_node(colors_node);
 
     // songbook.ily is the corpus library that the generated macros.ly includes
-    // as ../../songbook.ily; make_all mirrors it into the songs sandbox, and
-    // here the sandbox root plays that part.
-    let library_node = LilypondFile::new(PathBuf::from("songbook.ily"));
-    let _ = g.add_root_node(library_node);
+    // as ../../songbook.ily; make_all installs it into the songs sandbox, and
+    // here the sandbox root plays that part. tests/data carries no copy, so
+    // this lands the shipped default - the path a fresh corpus takes.
+    assert!(
+        install_songbook_library(Path::new("tests/data"), sandbox.path()),
+        "songbook.ily should be installed in the sandbox"
+    );
 
     // mademoiselle_K/ca_me_vexe - has lilypond files
     let song: Song = serde_yaml::from_str(
@@ -751,5 +754,29 @@ fn test_make_all_book() {
     assert!(
         delivered.exists(),
         "pdf/book-test_book.pdf should be delivered"
+    );
+}
+
+#[test]
+fn test_install_songbook_library_defaults_and_overrides() {
+    // No copy in the sources: the corpus gets the library shipped in the
+    // binary, so `\include "../../songbook.ily"` resolves for a fresh corpus.
+    let srcdir = tempfile::tempdir().expect("Failed to create temp dir");
+    let sandbox = tempfile::tempdir().expect("Failed to create temp dir");
+    assert!(install_songbook_library(srcdir.path(), sandbox.path()));
+    let installed = std::fs::read_to_string(sandbox.path().join("songbook.ily"))
+        .expect("songbook.ily should be installed");
+    assert!(
+        installed.contains("songbookBeatMarks"),
+        "the default library should carry the corpus macros"
+    );
+
+    // A copy in the sources replaces it verbatim.
+    std::fs::write(srcdir.path().join("songbook.ily"), "% mine\n").expect("write corpus library");
+    assert!(install_songbook_library(srcdir.path(), sandbox.path()));
+    assert_eq!(
+        std::fs::read_to_string(sandbox.path().join("songbook.ily")).unwrap(),
+        "% mine\n",
+        "a corpus songbook.ily should win over the default"
     );
 }
