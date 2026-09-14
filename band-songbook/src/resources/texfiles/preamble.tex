@@ -96,6 +96,11 @@
 % typeset for real.
 \newsavebox{\basecoupletprobe}
 
+% Name of the chord-chart coordinate at the center of bar #1, for add.tikz:
+% \path (\BAR{4}) ... The argument is an integer expression, so \BAR{4+1}
+% works too. song.tikz defines one BAR_<n> coordinate per bar.
+\newcommand*{\BAR}[1]{BAR_\the\numexpr#1\relax}
+
 \newcommand{\basecouplet}[3]{
 	\vspace{6pt}
 	\fcolorbox{gray}{#1}{\parbox{\dimexpr\columnwidth-2\fboxsep-2\fboxrule}{

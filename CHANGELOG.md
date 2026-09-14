@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Every song has an `add.tikz` beside `song.yml`: TikZ drawings mounted into
+  the sandbox and inserted at the end of the chord chart. The file is required.
+- The chord chart defines a coordinate `BAR_<n>` at the center of every bar;
+  `\BAR{n}` names it, e.g. `\path (\BAR{4}) ...`. Repeated rows reuse the
+  cells of their first pass, and a Ref section's bars sit at the center of its
+  box.
+
 ### Changed
 
 - Section headers in the song PDF show the section's first and last bar

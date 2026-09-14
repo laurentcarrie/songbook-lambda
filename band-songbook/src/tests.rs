@@ -40,6 +40,10 @@ fn test_yamake_build_song() {
     let body_node = TexFile::new(PathBuf::from("PJHarvey/Dress/body.tex"));
     let _ = g.add_root_node(body_node);
 
+    // add.tikz is a root node too: song.tikz inputs it
+    let add_tikz_node = TexFile::new(PathBuf::from("PJHarvey/Dress/add.tikz"));
+    let _ = g.add_root_node(add_tikz_node);
+
     // Pre-add PdfFile with Initial status so it goes through build loop
     // (yamake marks expanded nodes as "mounted" which skips build)
     // Add edge from SongYml so PdfFile isn't treated as a root node
@@ -93,6 +97,9 @@ fn test_yamake_build_song_with_lilypond() {
 
     let body_node = TexFile::new(PathBuf::from("mademoiselle_K/ca_me_vexe/body.tex"));
     let _ = g.add_root_node(body_node);
+
+    let add_tikz_node = TexFile::new(PathBuf::from("mademoiselle_K/ca_me_vexe/add.tikz"));
+    let _ = g.add_root_node(add_tikz_node);
 
     // Add clicks-def as root node and clicks.yml as build node (has_clicks is true)
     let clicks_def_node = ClickDef::new(
@@ -566,6 +573,8 @@ structure: []
         "\\input{song.tikz}\n\\newpage\n\\songlyrics\n",
     )
     .expect("write body.tex");
+
+    std::fs::write(song_dir.join("add.tikz"), "% no extra drawings\n").expect("write add.tikz");
 
     // Provide clicks.mp3, clicks-def.yml, and song.mp3
     std::fs::copy("tests/data/click/clicks.mp3", song_dir.join("clicks.mp3"))

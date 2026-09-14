@@ -1,0 +1,5 @@
+\path (\BAR{4}) +(1*\xr ,-.25*\xr) coordinate (A) ;
+\node[draw,ellipse,dotted,fill=red!10,opacity=1,minimum width=1.3cm,minimum height=.5cm](b) at (A)  {
+    {\songbookfont\fontsize{10pt}{10pt}\selectfont A ~ }
+} ;
+

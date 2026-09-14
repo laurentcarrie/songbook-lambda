@@ -273,6 +273,12 @@ pub fn make_all(
         let body_node = TexFile::new(body_path);
         let _ = g.add_root_node(body_node);
 
+        // Add add.tikz as root node: song-specific TikZ drawings, \input at the
+        // end of the generated song.tikz, so every song must have one
+        let add_tikz_path = parent_dir.join("add.tikz");
+        let add_tikz_node = TexFile::new(add_tikz_path);
+        let _ = g.add_root_node(add_tikz_node);
+
         // Add clicks-def and clicks.yml nodes if has_clicks is true
         if song.files.has_clicks {
             let clicks_def_path = parent_dir.join("clicks-def.yml");

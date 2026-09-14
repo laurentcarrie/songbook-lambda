@@ -76,6 +76,7 @@
     \coordinate (A2) at ($(A1) + (0, -\yr)$);
     \node[anchor=east] at (\columnleft - 0.02, \currentline - 0.85*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
 {{{bar_rects this ../this.item.Chords.color}}}
+{{{bar_coordinates this}}}
 {{#if (gt (row_multiplier this) 1)}}
     \node[anchor=west] at (\columnleft + \xr * {{number_of_bars this}} + 0.1, \currentline - 0.5*\yr) { \fontsize{10pt}{10pt}\selectfont\bfseries x{{row_multiplier this}} };
 {{/if}}
@@ -91,6 +92,7 @@
 {{#if this.item.Ref}}
     \node[anchor=east] at (\columnleft + \xr - 0.02, \currentline - 0.35*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
     \draw[draw=black, fill={{this.item.Ref.color}}] (\columnleft + \xr, \currentline) rectangle ++(2*\xr, -\yr/2) node[midway] { {{{this.item.Ref.title}}} };
+{{{ref_bar_coordinates this.item.Ref.link @root.song.structure}}}
     \tikzmath{\currentline = \currentline - \yr/2;}
     \tikzmath{\currentline = \currentline - \spacebetweensections;}
     \tikzmath{\barcount = \barcount + {{ref_bar_count this.item.Ref.link @root.song.structure}};}
@@ -100,6 +102,9 @@
     \tikzmath{\currentline = \topline;}
 {{/if}}
 {{/each}}
+
+    % Song-specific drawings, from the add.tikz source beside song.yml
+    \input{add.tikz}
 
 \end{tikzpicture}
 \end{adjustbox}
