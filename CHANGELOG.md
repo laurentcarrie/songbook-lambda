@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.39]
+
+### Added
+
+- A song can carry an `external_id` in its `info` section, the id of the song
+  on an external music service: `external_id: !Deezer "3135556"` or
+  `external_id: !Youtube "dQw4w9WgXcQ"`. The field is optional.
+
 ## [0.0.38]
 
 ### Added
