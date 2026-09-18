@@ -339,6 +339,7 @@ mod tests {
                 tempo: 120,
                 time_signature: None,
                 tags: vec![],
+                external_id: None,
             },
             meta: Default::default(),
             structure: vec![
@@ -416,6 +417,7 @@ mod tests {
                 tempo: 120,
                 time_signature: None,
                 tags: vec![],
+                external_id: None,
             },
             meta: Default::default(),
             structure: vec![],

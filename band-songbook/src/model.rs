@@ -50,6 +50,21 @@ pub struct SongInfo {
     /// Free-form tags for categorizing the song.
     #[serde(default)]
     pub tags: Vec<String>,
+    /// Identifier of the song on an external music service, if known.
+    #[serde(default)]
+    pub external_id: Option<ExternalId>,
+}
+
+/// The identifier of a song on an external music service.
+///
+/// In yaml, the variant is given as a tag: `external_id: !Deezer "3135556"`
+/// or `external_id: !Youtube "dQw4w9WgXcQ"`.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub enum ExternalId {
+    /// A Deezer track id.
+    Deezer(String),
+    /// A YouTube video id.
+    Youtube(String),
 }
 
 /// Normalizes a name for use in a file name.
@@ -348,6 +363,7 @@ mod tests {
             tempo: 120,
             time_signature: None,
             tags: vec![],
+            external_id: None,
         }
         .file_stem_of_song()
     }
@@ -369,6 +385,33 @@ mod tests {
             "oasis--@--rock__n_roll_star"
         );
         assert_eq!(stem("Maroon5", "This Love"), "maroon5--@--this_love");
+    }
+
+    #[test]
+    fn test_external_id_yaml_roundtrip() {
+        let info: SongInfo = serde_yaml::from_str(
+            "title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\nexternal_id: !Deezer \"3135556\"\n",
+        )
+        .unwrap();
+        assert_eq!(info.external_id, Some(ExternalId::Deezer("3135556".to_string())));
+
+        let info: SongInfo = serde_yaml::from_str(
+            "title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\nexternal_id: !Youtube \"dQw4w9WgXcQ\"\n",
+        )
+        .unwrap();
+        assert_eq!(
+            info.external_id,
+            Some(ExternalId::Youtube("dQw4w9WgXcQ".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_external_id_is_optional() {
+        // songs written before the field exists must still parse
+        let info: SongInfo =
+            serde_yaml::from_str("title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\n")
+                .unwrap();
+        assert_eq!(info.external_id, None);
     }
 
     #[test]
