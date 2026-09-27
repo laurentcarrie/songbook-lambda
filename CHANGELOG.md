@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.40]
+
+### Fixed
+
+- Articulations (staccato, accent...) now print on tab staves: `songbook.ily`
+  reverts `Script.stencil` on every `TabStaff`, so `c4-.` shows its dot even
+  with the rhythm-only tab setups.
+
+### Removed
+
+- `\mypull`, `\mypulled` and `\myrelease`: the guitar articulation macros
+  were no longer used by any song.
+
 ## [0.0.39]
 
 ### Added
