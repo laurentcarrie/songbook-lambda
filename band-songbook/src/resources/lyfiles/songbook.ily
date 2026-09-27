@@ -15,32 +15,6 @@
 %%
 %% Only per-song values belong in the generated macros.ly - songtempo.
 
-% Guitar articulation marks. \mypull and \myrelease take the grace note and the
-% note it slurs into; \mypulled marks a single note.
-mypull =
-#(define-scheme-function
-  (na nb)
-  (ly:music? ly:music?)
-  #{
-    \grace {$na ^\markup {\char ##x27B6 }} $nb
-  #})
-
-mypulled =
-#(define-scheme-function
-  (na)
-  (ly:music?)
-  #{
-    $na ^\markup {\char ##x27B6 }
-  #})
-
-myrelease =
-#(define-scheme-function
-  (na nb)
-  (ly:music? ly:music?)
-  #{
-    \grace {$na ^\markup {\char ##x27B4 }} $nb
-  #})
-
 % Red tick on every beat, as a transcription guide. Takes the number of 4/4
 % bars to cover - pass the bar count of the score it sits beside. Odd beats (1
 % and 3) get a square, even beats (2 and 4) a cross, so the backbeat is legible
@@ -76,3 +50,13 @@ songbookDrums =
        }
      }
    #})
+
+% A TabStaff hides articulations (staccato, accent...) by default, and the
+% rhythm-only tab setups some songs use do not restore them. Show them on
+% every tab staff, so c4-. or c4^. prints its dot.
+\layout {
+  \context {
+    \TabStaff
+    \revert Script.stencil
+  }
+}
