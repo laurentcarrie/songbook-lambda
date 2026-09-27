@@ -1,0 +1,9 @@
+ i  want to have the management of books.
+  books, just like songs, will be in folder, for now books
+  each book is a yaml file. It will have entries :
+  - name
+  - tags: list of tags
+  - songs: list of songs. a song will use the normalized version, ie author--@--title
+
+  we will have, just as songs, in the sandbox, for each song, the generation of main.tex, that will collate all the listed songs. These latex files will produce, in the delivery/pdf folder, files book-<name>.pdf
+
