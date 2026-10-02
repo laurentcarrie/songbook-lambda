@@ -23,6 +23,15 @@ pub fn glyph_of_baritem(item: &BarItem) -> String {
                 Alteration::Nofith => s.push_str("nofith"),
                 Alteration::None => {}
             }
+            // Slash chord: the bass note is drawn small under the chord
+            if let Some(bass) = &chord.bass {
+                let accidental = match bass.accidental {
+                    Accidental::Flat => "$\\flat$",
+                    Accidental::Sharp => "\\#",
+                    Accidental::None => "",
+                };
+                s = format!("\\chordbass{{{s}}}{{{}{accidental}}}", bass.name);
+            }
             s
         }
         BarItem::Rest(_) => "\\chordHRest".to_string(),

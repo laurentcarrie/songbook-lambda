@@ -19,6 +19,13 @@ pub enum Alteration {
     Dim,
 }
 
+/// The bass note of a slash chord (the `D#` in `B/D#`)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Bass {
+    pub name: String,
+    pub accidental: Accidental,
+}
+
 /// Represents a musical chord
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Chord {
@@ -26,6 +33,8 @@ pub struct Chord {
     pub accidental: Accidental,
     pub minor: bool,
     pub alteration: Alteration,
+    /// Bass note of a slash chord, if any
+    pub bass: Option<Bass>,
 }
 
 /// Represents a rest (silence)

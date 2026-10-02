@@ -90,7 +90,7 @@
 {{{bar_rects this ../this.item.Chords.color}}}
 {{{bar_coordinates this}}}
 {{#if (gt (row_multiplier this) 1)}}
-    \node[anchor=west] at (\columnleft + \xr * {{number_of_bars this}} + 0.1, \currentline - 0.5*\yr) { \fontsize{10pt}{10pt}\selectfont\bfseries x{{row_multiplier this}} };
+    \node[anchor=west,draw,circle,inner sep=1.5pt] at (\columnleft + \xr * {{number_of_bars this}} + 0.15, \currentline - 0.5*\yr) { \fontsize{10pt}{10pt}\selectfont\bfseries {{row_multiplier this}} };
 {{/if}}
     \tikzmath{\currentline = \currentline - \yr;}
     \tikzmath{\barcount = \barcount + {{number_of_bars this}} * {{row_multiplier this}};}

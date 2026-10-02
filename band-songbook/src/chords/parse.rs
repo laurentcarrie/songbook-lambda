@@ -1,4 +1,4 @@
-use super::model::{Accidental, Alteration, Bar, BarItem, Chord, ParsedRow, Repeat, Rest};
+use super::model::{Accidental, Alteration, Bar, BarItem, Bass, Chord, ParsedRow, Repeat, Rest};
 
 /// Error type for chord parsing
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,6 +29,18 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     // Check for half-bar marker
     if s == "2/4" {
         return Ok(BarItem::HalfBar);
+    }
+
+    // Slash chord: <chord>/<bass note>, e.g. B/D# or Bs/Ds
+    if let Some((chord_part, bass_part)) = s.split_once('/') {
+        let bass = parse_bass(bass_part).ok_or_else(|| ParseError::InvalidChord(s.to_string()))?;
+        return match parse_item(chord_part)? {
+            BarItem::Chord(chord) => Ok(BarItem::Chord(Chord {
+                bass: Some(bass),
+                ..chord
+            })),
+            _ => Err(ParseError::InvalidChord(s.to_string())),
+        };
     }
 
     let mut chars = s.chars().peekable();
@@ -106,7 +118,28 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
         accidental,
         minor,
         alteration,
+        bass: None,
     }))
+}
+
+/// Parses the bass note of a slash chord: [A-G] optionally followed by
+/// # or s (sharp), b or f (flat)
+fn parse_bass(s: &str) -> Option<Bass> {
+    let mut chars = s.chars();
+    let name = chars.next().filter(|c| ('A'..='G').contains(c))?;
+    let accidental = match chars.next() {
+        None => Accidental::None,
+        Some('#') | Some('s') => Accidental::Sharp,
+        Some('b') | Some('f') => Accidental::Flat,
+        Some(_) => return None,
+    };
+    if chars.next().is_some() {
+        return None;
+    }
+    Some(Bass {
+        name: name.to_string(),
+        accidental,
+    })
 }
 
 /// Parses a string of chords separated by | into a ParsedRow
@@ -201,6 +234,26 @@ mod tests {
         let result = parse(input).unwrap();
         assert_eq!(result.bars.len(), 4);
         assert_eq!(result.repeat.n, 2);
+    }
+
+    #[test]
+    fn test_parse_slash_chord() {
+        let result = parse("B/D#|Em/B|C/Gf|G").unwrap();
+        assert_eq!(result.bars.len(), 4);
+        if let BarItem::Chord(chord) = &result.bars[0].items[0] {
+            assert_eq!(chord.name, "B");
+            let bass = chord.bass.as_ref().unwrap();
+            assert_eq!(bass.name, "D");
+            assert_eq!(bass.accidental, Accidental::Sharp);
+        } else {
+            panic!("Expected Chord");
+        }
+        if let BarItem::Chord(chord) = &result.bars[2].items[0] {
+            assert_eq!(chord.bass.as_ref().unwrap().accidental, Accidental::Flat);
+        } else {
+            panic!("Expected Chord");
+        }
+        assert!(parse("B/H").is_err());
     }
 
     #[test]
