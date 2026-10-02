@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.41]
+
+### Added
+
+- Slash chords: `B/D#`, `Bs/Ds`, `Em/B`, `C/Gf` in a chord row. The bass note is
+  drawn small under the chord (new `\chordbass` macro in `chords.tex`).
+
+### Changed
+
+- Repeat marks (`x2`, `x3`...) are now a number in a circle, without the `x`.
+
 ## [0.0.40]
 
 ### Fixed
