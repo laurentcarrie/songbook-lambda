@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use strudel_of_lilypond::sequencer::model::{Bar, BarSequence, EBarSequence, SequenceItem};
 
+use crate::chords::bar_numbering::repeat_block;
 use crate::chords::parse::parse;
 use crate::model::{SectionItem, StructureItem};
 
@@ -96,8 +97,10 @@ fn rows_to_ebarsequence(
     let patterns = drum_sequence.map(expand_drum_sequence).unwrap_or_default();
     let mut pattern_idx = 0;
     let mut items = Vec::new();
+    // index in `items` of the item of each row (None for a skipped row)
+    let mut item_of_row: Vec<Option<usize>> = vec![None; rows.len()];
 
-    for row in rows {
+    for (row_idx, row) in rows.iter().enumerate() {
         match parse(row) {
             Ok(parsed) => {
                 let bars: Vec<EBarSequence> = parsed
@@ -116,7 +119,26 @@ fn rows_to_ebarsequence(
                     continue;
                 }
 
-                let row_item = if parsed.repeat.n > 1 {
+                // `xN,M` with M > 1: the last M rows are played N times together
+                let block_first = repeat_block(rows, row_idx)
+                    .map(|b| b.first)
+                    .filter(|&first| first < row_idx);
+                let row_item = if let Some(first) = block_first {
+                    let plain = if bars.len() == 1 {
+                        bars.into_iter().next().unwrap()
+                    } else {
+                        EBarSequence::Group(bars)
+                    };
+                    items.push(plain);
+                    let start = item_of_row[first..row_idx]
+                        .iter()
+                        .flatten()
+                        .next()
+                        .copied()
+                        .unwrap_or(items.len() - 1);
+                    let block: Vec<EBarSequence> = items.drain(start..).collect();
+                    EBarSequence::RepeatGroup(parsed.repeat.n, block)
+                } else if parsed.repeat.n > 1 {
                     if bars.len() == 1 {
                         if let EBarSequence::Single(bar) = bars.into_iter().next().unwrap() {
                             EBarSequence::RepeatBar(parsed.repeat.n, bar)
@@ -133,6 +155,7 @@ fn rows_to_ebarsequence(
                 };
 
                 items.push(row_item);
+                item_of_row[row_idx] = Some(items.len() - 1);
             }
             Err(e) => {
                 log::warn!("Failed to parse row '{row}' in section '{section_id}': {e}");

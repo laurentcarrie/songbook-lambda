@@ -1,4 +1,6 @@
-use crate::chords::bar_numbering::barcount_map_of_structure;
+use crate::chords::bar_numbering::{
+    barcount_map_of_structure, repeat_block, row_bar_counts, row_contributions,
+};
 use crate::chords::glyph::glyph_of_baritem;
 use crate::chords::model::{Bar, BarItem};
 use crate::chords::parse::parse;
@@ -297,8 +299,8 @@ fn write_bar_coordinates(
     Ok(())
 }
 
-/// Defines `BAR_<n>` at the center of each bar cell of a row. A repeated row
-/// is drawn once, so the bars of every repeat share the cells of the first.
+/// Defines `BAR_<n>` at the center of each bar cell of a row (first pass only;
+/// the bars of the other passes of a repeat are defined by `repeat_marks`).
 /// Usage: {{{bar_coordinates row}}}
 pub fn bar_coordinates_helper(
     h: &Helper,
@@ -317,15 +319,108 @@ pub fn bar_coordinates_helper(
     let parsed = parse(input).map_err(|e| RenderErrorReason::Other(e.to_string()))?;
     let nbars = parsed.bars.len();
     write_bar_coordinates(
-        nbars * parsed.repeat.n as usize,
+        nbars,
         |k| {
             format!(
                 "\\columnleft + {}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr",
-                k % nbars
+                k
             )
         },
         out,
     )
+}
+
+/// Reads the `rows` array and the row `index` parameters of the repeat helpers.
+fn rows_and_index(h: &Helper) -> Result<(Vec<String>, usize), RenderError> {
+    let rows: Vec<String> = h
+        .param(0)
+        .and_then(|v| v.value().as_array())
+        .ok_or(RenderErrorReason::Other("missing rows parameter".to_string()))?
+        .iter()
+        .map(|v| v.as_str().unwrap_or("").to_string())
+        .collect();
+    let index = h
+        .param(1)
+        .and_then(|v| v.value().as_u64())
+        .ok_or(RenderErrorReason::Other("missing index parameter".to_string()))?
+        as usize;
+    Ok((rows, index))
+}
+
+/// Extra bars added by the repeat ending at row `index` (0 if none): the
+/// other passes of the repeated block. Usage: {{repeat_extra_bars rows @index}}
+pub fn repeat_extra_bars_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    let (rows, index) = rows_and_index(h)?;
+    let extra = row_contributions(&rows)
+        .get(index)
+        .zip(row_bar_counts(&rows).get(index))
+        .map(|(total, own)| *total - *own as i32)
+        .unwrap_or(0);
+    out.write(&extra.to_string())?;
+    Ok(())
+}
+
+/// Draws the repeat mark of the row at `index` (nothing without repeat): a
+/// brace around the repeated rows when the block has several rows, then one
+/// solid dot per play. Also defines the `BAR_<n>` coordinates of the further
+/// passes, on the cells of the block that is drawn once. Emitted while
+/// `\currentline` is the top of the block's last row and `\barcount` is the
+/// count at the start of that row.
+/// Usage: {{{repeat_marks rows @index}}}
+pub fn repeat_marks_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> Result<(), RenderError> {
+    let (rows, index) = rows_and_index(h)?;
+    let Some(block) = repeat_block(&rows, index) else {
+        return Ok(());
+    };
+    let bars = row_bar_counts(&rows);
+    let nrows = block.last - block.first + 1;
+    let block_bars: usize = bars[block.first..=block.last].iter().sum();
+    let width = bars[block.first..=block.last].iter().copied().max().unwrap_or(1);
+    let before_last = block_bars - bars[block.last];
+
+    // bar numbers of the further passes, on the cells of the block
+    for pass in 1..block.n as usize {
+        let mut before = 0;
+        for (i, row) in (block.first..=block.last).enumerate() {
+            for m in 0..bars[row] {
+                let offset = pass * block_bars + before + m - before_last;
+                out.write(&format!(
+                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\n",
+                    nrows - 1 - i
+                ))?;
+            }
+            before += bars[row];
+        }
+    }
+
+    let right = format!("\\columnleft + \\xr * {width}");
+    // same column for the dots with or without a brace
+    let dots_offset = 0.35;
+    if nrows > 1 {
+        out.write(&format!(
+            "    \\draw[decorate,decoration={{brace,amplitude=5pt}}] ({right} + 0.25, \\currentline + {}*\\yr - 0.05) -- ({right} + 0.25, \\currentline - \\yr + 0.05);\n",
+            nrows - 1
+        ))?;
+    }
+    let mid = (nrows - 1) as f64 / 2.0;
+    out.write(&format!(
+        "    % repeat marker: one solid dot per play\n    \\foreach \\rep in {{1,...,{}}} {{\n      \\fill[black] ({{{right} + {dots_offset} + 0.3}}, {{\\currentline - 0.5*\\yr + {mid}*\\yr + 0.3*(\\rep - {})}}) circle (0.1);\n    }}\n",
+        block.n,
+        (block.n as f64 + 1.0) / 2.0
+    ))?;
+    Ok(())
 }
 
 /// Defines `BAR_<n>` for every bar of a Ref section, all at the center of
@@ -402,6 +497,8 @@ pub fn register_helpers(handlebars: &mut Handlebars) {
     handlebars.register_helper("bar_glyph", Box::new(bar_glyph_helper));
     handlebars.register_helper("bar_rects", Box::new(bar_rects_helper));
     handlebars.register_helper("row_multiplier", Box::new(row_multiplier_helper));
+    handlebars.register_helper("repeat_extra_bars", Box::new(repeat_extra_bars_helper));
+    handlebars.register_helper("repeat_marks", Box::new(repeat_marks_helper));
     handlebars.register_helper("ref_bar_count", Box::new(ref_bar_count_helper));
     handlebars.register_helper("bar_coordinates", Box::new(bar_coordinates_helper));
     handlebars.register_helper("ref_bar_coordinates", Box::new(ref_bar_coordinates_helper));
@@ -441,16 +538,50 @@ mod tests {
         let mut handlebars = Handlebars::new();
         register_helpers(&mut handlebars);
 
-        // 2 bars repeated twice: 4 coordinates, the repeat reusing the cells
+        // first pass only: 2 bars, 2 coordinates
         let template = "{{{bar_coordinates input}}}";
         let data = serde_json::json!({"input": "A|B|x2"});
 
         let result = handlebars.render_template(template, &data).unwrap();
         let lines: Vec<&str> = result.lines().collect();
-        assert_eq!(lines.len(), 4);
-        for (k, cell) in [0, 1, 0, 1].into_iter().enumerate() {
-            assert!(lines[k].contains(&format!("{{\\barcount + {k}}}\\coordinate (BAR_\\barnum)")));
-            assert!(lines[k].contains(&format!("(\\columnleft + {cell}*\\xr + 0.5*\\xr,")));
+        assert_eq!(lines.len(), 2);
+        for (k, line) in lines.iter().enumerate() {
+            assert!(line.contains(&format!("{{\\barcount + {k}}}\\coordinate (BAR_\\barnum)")));
+            assert!(line.contains(&format!("(\\columnleft + {k}*\\xr + 0.5*\\xr,")));
         }
+    }
+
+    #[test]
+    fn test_repeat_marks_single_row() {
+        let mut handlebars = Handlebars::new();
+        register_helpers(&mut handlebars);
+        let template = "{{{repeat_marks rows 0}}}|{{repeat_extra_bars rows 0}}";
+        let data = serde_json::json!({"rows": ["A|B|x3"]});
+        let result = handlebars.render_template(template, &data).unwrap();
+        // passes 2 and 3 reuse the 2 cells: offsets 2..5
+        for offset in 2..6 {
+            assert!(result.contains(&format!("{{\\barcount + {offset}}}")), "{result}");
+        }
+        assert!(result.contains("\\foreach \\rep in {1,...,3}"));
+        assert!(!result.contains("brace"));
+        assert!(result.ends_with("|4"));
+    }
+
+    #[test]
+    fn test_repeat_marks_block() {
+        let mut handlebars = Handlebars::new();
+        register_helpers(&mut handlebars);
+        let data = serde_json::json!({"rows": ["A|B", "C|D|x2,2"]});
+        // no mark on the first row of the block
+        let first = handlebars.render_template("{{{repeat_marks rows 0}}}", &data).unwrap();
+        assert_eq!(first, "");
+        let result = handlebars.render_template("{{{repeat_marks rows 1}}}|{{repeat_extra_bars rows 1}}", &data).unwrap();
+        // second pass: row 0 bars are 2,3 (one row above), row 1 bars are 4,5
+        assert!(result.contains("{\\barcount + 2}\\coordinate (BAR_\\barnum) at (\\columnleft + 0*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + 1*\\yr)"), "{result}");
+        assert!(result.contains("{\\barcount + 5}\\coordinate (BAR_\\barnum) at (\\columnleft + 1*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + 0*\\yr)"), "{result}");
+        assert!(result.contains("brace"));
+        assert!(result.contains("\\foreach \\rep in {1,...,2}"));
+        // the block adds one more pass of its 4 bars
+        assert!(result.ends_with("|4"));
     }
 }

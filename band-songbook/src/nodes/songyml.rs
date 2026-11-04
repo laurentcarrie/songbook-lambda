@@ -164,9 +164,15 @@ impl GRootNode for SongYml {
         for item in &mut song.structure {
             if let SectionItem::Ref(ref_section) = &mut item.item {
                 if let Some(linked_color) = chords_colors.get(&ref_section.link) {
-                    // Fill in color from linked Chords if not specified
+                    // Explicit color wins, then the color of the explicit type,
+                    // then the color of the linked Chords
                     if ref_section.color.is_none() {
-                        ref_section.color = Some(linked_color.clone());
+                        ref_section.color = Some(match &ref_section.section_type {
+                            Some(st) => section_colors
+                                .color_of_section(st, None)
+                                .map_err(ExpandError::Other)?,
+                            None => linked_color.clone(),
+                        });
                     }
                 } else {
                     let error_msg = format!(

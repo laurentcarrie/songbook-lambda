@@ -66,7 +66,21 @@ impl GNode for LyTexFile {
             return false;
         }
 
-        let content = format!("\\lilypondfile{{{ly_filename}}}\n");
+        // Fingerprint of the score and every file it \include-s, as a LaTeX
+        // comment. The build keys downstream nodes on this file's content, and
+        // `\lilypondfile{x.ly}` alone never changes when only an included
+        // definitions file does - so lilypond-book would not be rerun.
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        for p in predecessors.iter().filter(|p| p.tag() == "lilypond") {
+            let path = p.pathbuf();
+            std::hash::Hash::hash(&path, &mut hasher);
+            if let Ok(bytes) = std::fs::read(sandbox.join(&path)) {
+                std::hash::Hash::hash(&bytes, &mut hasher);
+            }
+        }
+        let fingerprint = std::hash::Hasher::finish(&hasher);
+
+        let content = format!("\\lilypondfile{{{ly_filename}}}\n% sources: {fingerprint:016x}\n");
 
         if let Err(e) = std::fs::write(&full_path, &content) {
             log::error!("Failed to write {}: {}", self.path.display(), e);
