@@ -345,7 +345,7 @@ fn test_parse_chords() {
     let input = "Em | Em|C7|G|Am Bm7|HRest|Csm7|Edim|Bsus4|Cssus2|x2";
     let result = parse(input).unwrap();
     assert_eq!(result.bars.len(), 10);
-    assert_eq!(result.repeat, Repeat { n: 2 });
+    assert_eq!(result.repeat, Repeat { n: 2, rows: 1 });
 
     // First bar: Em (E minor)
     assert_eq!(result.bars[0].items.len(), 1);

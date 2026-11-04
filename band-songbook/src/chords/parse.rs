@@ -142,6 +142,20 @@ fn parse_bass(s: &str) -> Option<Bass> {
     })
 }
 
+/// Parses a repeat marker: `x2` (this row twice) or `x2,3` (the 3 rows ending
+/// at this one, twice). The number of rows must be at least 1.
+fn parse_repeat(s: &str) -> Option<Repeat> {
+    let s = s.strip_prefix('x')?;
+    let (n, rows) = match s.split_once(',') {
+        Some((n, rows)) => (n.trim().parse().ok()?, rows.trim().parse().ok()?),
+        None => (s.trim().parse().ok()?, 1),
+    };
+    if rows == 0 {
+        return None;
+    }
+    Some(Repeat { n, rows })
+}
+
 /// Parses a string of chords separated by | into a ParsedRow
 /// Each bar contains chords separated by spaces
 /// Empty bars are filtered out
@@ -149,20 +163,11 @@ fn parse_bass(s: &str) -> Option<Bass> {
 pub fn parse(input: &str) -> Result<ParsedRow, ParseError> {
     let parts: Vec<&str> = input.split('|').collect();
 
-    // Check if the last part is a repeat marker (xN)
-    let (bar_parts, repeat) = if let Some(last) = parts.last() {
-        let trimmed = last.trim();
-        if let Some(stripped) = trimmed.strip_prefix('x') {
-            if let Ok(n) = stripped.parse::<u32>() {
-                (&parts[..parts.len() - 1], Repeat { n })
-            } else {
-                (&parts[..], Repeat { n: 1 })
-            }
-        } else {
-            (&parts[..], Repeat { n: 1 })
-        }
-    } else {
-        (&parts[..], Repeat { n: 1 })
+    // Check if the last part is a repeat marker (xN or xN,M)
+    let no_repeat = Repeat { n: 1, rows: 1 };
+    let (bar_parts, repeat) = match parts.last().and_then(|l| parse_repeat(l.trim())) {
+        Some(repeat) => (&parts[..parts.len() - 1], repeat),
+        None => (&parts[..], no_repeat),
     };
 
     let bars: Result<Vec<Bar>, ParseError> = bar_parts
@@ -234,6 +239,16 @@ mod tests {
         let result = parse(input).unwrap();
         assert_eq!(result.bars.len(), 4);
         assert_eq!(result.repeat.n, 2);
+    }
+
+    #[test]
+    fn test_parse_with_block_repeat() {
+        let result = parse("Em|G|x2,3").unwrap();
+        assert_eq!(result.bars.len(), 2);
+        assert_eq!(result.repeat.n, 2);
+        assert_eq!(result.repeat.rows, 3);
+        let result = parse("Em|G|x3").unwrap();
+        assert_eq!((result.repeat.n, result.repeat.rows), (3, 1));
     }
 
     #[test]

@@ -4,6 +4,7 @@
 %\DeclareMathOperator{\Re}{Re}
 
 \usetikzlibrary{calc}
+\usetikzlibrary{decorations.pathreplacing} % repeat braces
 \usetikzlibrary{math} %needed tikz library
 \usetikzlibrary{spline}
 \usetikzlibrary{positioning}
@@ -89,11 +90,9 @@
     \node[anchor=east] at (\columnleft - 0.02, \currentline - 0.85*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
 {{{bar_rects this ../this.item.Chords.color}}}
 {{{bar_coordinates this}}}
-{{#if (gt (row_multiplier this) 1)}}
-    \node[anchor=west,draw,circle,inner sep=1.5pt] at (\columnleft + \xr * {{number_of_bars this}} + 0.15, \currentline - 0.5*\yr) { \fontsize{10pt}{10pt}\selectfont\bfseries {{row_multiplier this}} };
-{{/if}}
+{{{repeat_marks ../this.item.Chords.rows @index}}}
     \tikzmath{\currentline = \currentline - \yr;}
-    \tikzmath{\barcount = \barcount + {{number_of_bars this}} * {{row_multiplier this}};}
+    \tikzmath{\barcount = \barcount + {{number_of_bars this}} + {{repeat_extra_bars ../this.item.Chords.rows @index}};}
 {{/each}}
     \coordinate (B) at (\columnleft, \currentline);
     \coordinate (C) at ($(A)!0.5!(B)$);

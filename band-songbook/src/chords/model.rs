@@ -43,10 +43,14 @@ pub struct Rest {
     pub duration: u32,
 }
 
-/// Represents a repeat marker (e.g., x2, x3)
+/// Represents a repeat marker: `xN` repeats the row N times in total,
+/// `xN,M` repeats the M rows ending at this row N times in total.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Repeat {
+    /// Number of times the block is played (1 = no repeat).
     pub n: u32,
+    /// Number of rows of the block, this row being the last one (>= 1).
+    pub rows: u32,
 }
 
 /// An item in a bar: either a chord, a rest, or a half-bar marker (2/4)

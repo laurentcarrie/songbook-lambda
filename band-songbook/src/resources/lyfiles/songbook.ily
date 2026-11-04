@@ -60,3 +60,29 @@ songbookDrums =
     \revert Script.stencil
   }
 }
+
+%% Show note durations in the tablature. A TabStaff hides stems, flags, beams
+%% and dots by default; this is the rhythm-related subset of \tabFullNotation,
+%% without the time signature, dynamics and tuplet brackets it also restores.
+tabDurations = {
+  \revert TabStaff.Stem.length
+  \revert TabStaff.Stem.no-stem-extend
+  \revert TabStaff.Stem.details
+  \revert TabStaff.Stem.stencil
+  \revert TabStaff.Flag.style
+  \revert TabStaff.Flag.stencil
+  \override TabStaff.Stem.stencil = #tabvoice::draw-double-stem-for-half-notes
+  \override TabStaff.Stem.X-extent = #tabvoice::make-double-stem-width-for-half-notes
+  \revert TabStaff.NoteColumn.ignore-collision
+  \set TabStaff.autoBeaming = ##t
+  \revert TabStaff.Beam.stencil
+  \revert TabStaff.Dots.stencil
+  \revert TabStaff.Tie.stencil
+  \revert TabStaff.Tie.after-line-breaking
+  %% A TabStaff also hides rests (engraver-init.ly sets Rest.stencil = ##f),
+  %% so an r8 would simply be invisible.
+  \revert TabStaff.Rest.stencil
+  \revert TabStaff.MultiMeasureRest.stencil
+  \revert TabStaff.MultiMeasureRestNumber.stencil
+  \revert TabStaff.MultiMeasureRestText.stencil
+}

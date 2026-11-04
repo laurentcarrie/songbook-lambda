@@ -5,6 +5,53 @@ use std::collections::HashMap;
 use super::parse::parse;
 use crate::model::{SectionItem, StructureItem};
 
+/// The repeated block ending at row `idx`, if that row carries a repeat marker.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RepeatBlock {
+    /// Number of times the block is played in total (>= 2).
+    pub n: u32,
+    /// Index of the first row of the block (`last` is the row with the marker).
+    pub first: usize,
+    pub last: usize,
+}
+
+/// Number of bars of each row (0 for a row that does not parse).
+pub fn row_bar_counts(rows: &[String]) -> Vec<usize> {
+    rows.iter()
+        .map(|r| parse(r).map(|p| p.bars.len()).unwrap_or(0))
+        .collect()
+}
+
+/// The repeat block ending at row `idx` (`xN` = this row, `xN,M` = the M rows
+/// ending here). None when the row has no repeat. A block longer than the
+/// rows above it is cut at the first row.
+pub fn repeat_block(rows: &[String], idx: usize) -> Option<RepeatBlock> {
+    let repeat = parse(rows.get(idx)?).ok()?.repeat;
+    if repeat.n <= 1 {
+        return None;
+    }
+    let first = (idx + 1).saturating_sub(repeat.rows as usize);
+    Some(RepeatBlock {
+        n: repeat.n,
+        first,
+        last: idx,
+    })
+}
+
+/// Bars each row adds to the running bar count: its own bars, plus, for the
+/// last row of a repeated block, the extra passes of the whole block.
+pub fn row_contributions(rows: &[String]) -> Vec<i32> {
+    let bars = row_bar_counts(rows);
+    (0..rows.len())
+        .map(|i| {
+            let extra = repeat_block(rows, i)
+                .map(|b| (b.n as usize - 1) * bars[b.first..=b.last].iter().sum::<usize>())
+                .unwrap_or(0);
+            (bars[i] + extra) as i32
+        })
+        .collect()
+}
+
 /// Computes bar numbers for sections.
 ///
 /// Returns a HashMap where:
@@ -27,22 +74,18 @@ pub fn barcount_map_of_structure(structure: &[StructureItem]) -> HashMap<String,
         match &item.item {
             SectionItem::Chords(chords) => {
                 let mut row_numbers = Vec::new();
-                for row in &chords.rows {
+                for add in row_contributions(&chords.rows) {
                     row_numbers.push(current_bar_count);
-                    if let Ok(parsed) = parse(row) {
-                        current_bar_count += parsed.bars.len() as i32 * parsed.repeat.n as i32;
-                    }
+                    current_bar_count += add;
                 }
                 result.insert(item.id.clone(), (row_numbers, current_bar_count));
             }
             SectionItem::Ref(ref_section) => {
                 let mut row_numbers = Vec::new();
                 if let Some(rows) = chords_rows.get(&ref_section.link) {
-                    for row in *rows {
+                    for add in row_contributions(rows) {
                         row_numbers.push(current_bar_count);
-                        if let Ok(parsed) = parse(row) {
-                            current_bar_count += parsed.bars.len() as i32 * parsed.repeat.n as i32;
-                        }
+                        current_bar_count += add;
                     }
                 }
                 result.insert(item.id.clone(), (row_numbers, current_bar_count));
@@ -57,6 +100,27 @@ pub fn barcount_map_of_structure(structure: &[StructureItem]) -> HashMap<String,
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn rows(r: &[&str]) -> Vec<String> {
+        r.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn test_repeat_block_and_contributions() {
+        // 4 rows of 2 bars; rows 0-1 played twice (marker on row 1)
+        let r = rows(&["A|B", "C|D|x2,2", "E|F"]);
+        assert_eq!(
+            repeat_block(&r, 1),
+            Some(RepeatBlock { n: 2, first: 0, last: 1 })
+        );
+        assert_eq!(repeat_block(&r, 0), None);
+        // row 1 adds its 2 bars + 1 extra pass of the 4-bar block
+        assert_eq!(row_contributions(&r), vec![2, 2 + 4, 2]);
+        // single-row repeat keeps the previous meaning
+        assert_eq!(row_contributions(&rows(&["A|B|x3"])), vec![6]);
+        // a block longer than the rows above is cut at the first row
+        assert_eq!(repeat_block(&rows(&["A|x2,5"]), 0).unwrap().first, 0);
+    }
     use crate::model::{ChordsSection, RefSection};
 
     #[test]

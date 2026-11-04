@@ -64,6 +64,13 @@ impl GNode for TexOfLilypond {
             workdir.display()
         );
 
+        // lilypond-book caches each snippet under a hash of its own source text.
+        // For \lilypondfile that is the .ly alone, so a change to a file it
+        // \include-s (defs.ly) leaves the hash, and the cached PDF, unchanged.
+        // This node only runs once the graph found a stale input, so start from
+        // a clean output dir to make lilypond-book recompile every snippet.
+        let _ = std::fs::remove_dir_all(&output_full_path);
+
         let mut cmd = Command::new("lilypond-book");
         cmd.arg("--output")
             .arg(output_dir.file_name().unwrap_or_default())
