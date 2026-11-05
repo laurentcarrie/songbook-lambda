@@ -780,3 +780,24 @@ fn test_install_songbook_library_defaults_and_overrides() {
         "a corpus songbook.ily should win over the default"
     );
 }
+
+#[test]
+fn test_song_without_structure_and_with_raw() {
+    let song: Song = serde_yaml::from_str(
+        r#"
+files:
+  lilypond: []
+  tex: []
+  mp3: []
+info:
+  title: Raw Song
+  author: Some Author
+  tempo: 120
+raw: score.pdf
+"#,
+    )
+    .expect("a song without structure must parse");
+    assert!(song.structure.is_none());
+    assert!(song.structure().is_empty());
+    assert_eq!(song.raw.as_deref(), Some("score.pdf"));
+}

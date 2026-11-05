@@ -138,8 +138,11 @@ impl GRootNode for SongYml {
         let settings = Settings::load(sandbox).map_err(ExpandError::Other)?;
         let section_colors = &settings.colors;
 
+        // Work on the sections apart from the song, put back below
+        let mut structure = song.structure.take().unwrap_or_default();
+
         // Resolve colors for Chords items using color_of_section
-        for item in &mut song.structure {
+        for item in &mut structure {
             if let SectionItem::Chords(chords) = &mut item.item {
                 let color = section_colors
                     .color_of_section(&chords.section_type, chords.color.as_deref())
@@ -149,8 +152,7 @@ impl GRootNode for SongYml {
         }
 
         // Build a map of Chords id -> color for Ref color resolution
-        let chords_colors: std::collections::HashMap<String, String> = song
-            .structure
+        let chords_colors: std::collections::HashMap<String, String> = structure
             .iter()
             .filter_map(|item| match &item.item {
                 SectionItem::Chords(chords) => {
@@ -161,7 +163,7 @@ impl GRootNode for SongYml {
             .collect();
 
         // Validate Ref items and fill in missing colors from linked Chords
-        for item in &mut song.structure {
+        for item in &mut structure {
             if let SectionItem::Ref(ref_section) = &mut item.item {
                 if let Some(linked_color) = chords_colors.get(&ref_section.link) {
                     // Explicit color wins, then the color of the explicit type,
@@ -185,6 +187,8 @@ impl GRootNode for SongYml {
             }
         }
 
+        song.structure = Some(structure);
+
         // Convert Song to JSON for handlebars templates
         let song_data = match serde_json::to_value(&song) {
             Ok(data) => data,
@@ -196,7 +200,7 @@ impl GRootNode for SongYml {
 
         // Extract unique section types for sections.tex
         let mut section_types: HashSet<String> = HashSet::new();
-        for item in &song.structure {
+        for item in song.structure() {
             match &item.item {
                 SectionItem::Chords(chords) => {
                     section_types.insert(chords.section_type.clone());
@@ -261,7 +265,7 @@ impl GRootNode for SongYml {
         let mut handlebars = Handlebars::new();
         register_helpers(&mut handlebars);
         // First and last bar of every Chords/Ref section, by section id
-        let bar_map = barcount_map_of_structure(&song.structure);
+        let bar_map = barcount_map_of_structure(song.structure());
         let bar_range_of = |id: &str| {
             bar_map
                 .get(id)
@@ -269,11 +273,14 @@ impl GRootNode for SongYml {
                 .unwrap_or((1, 1))
         };
         let bar_ranges: serde_json::Map<String, serde_json::Value> = song
-            .structure
+            .structure()
             .iter()
             .map(|item| {
                 let (first, last) = bar_range_of(&item.id);
-                (item.id.clone(), serde_json::json!({"first": first, "last": last}))
+                (
+                    item.id.clone(),
+                    serde_json::json!({"first": first, "last": last}),
+                )
             })
             .collect();
         let template_data = serde_json::json!({"song": song_data, "sections": sections, "settings": settings, "bar_ranges": bar_ranges});
@@ -379,7 +386,7 @@ impl GRootNode for SongYml {
 
         // Build the lyrics_inputs content (shared by both 1col and 2col)
         let mut lyrics_inputs = String::new();
-        for item in &song.structure {
+        for item in song.structure() {
             match &item.item {
                 SectionItem::Chords(chords) => {
                     let color = chords.color.as_deref().unwrap_or("white");
@@ -532,8 +539,7 @@ impl GRootNode for SongYml {
         }
         let from_sources = self.included_ly_of(sandbox, &scan_roots);
         for input in scanned_inputs.iter().chain(from_sources.iter()) {
-            if !input.extension().map(|e| e == "ly").unwrap_or(false)
-                || scan_roots.contains(input)
+            if !input.extension().map(|e| e == "ly").unwrap_or(false) || scan_roots.contains(input)
             {
                 continue;
             }

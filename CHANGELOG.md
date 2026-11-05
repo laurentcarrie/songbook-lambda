@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.43]
+
+### Added
+
+- `world.yml`: an index of the delivery, written at the root of the delivery
+  next to `pdf/`. It lists the tags, the songs (id, author, title, tags, pdf)
+  and the books (name, tags, songs, pdf). Only written when the build succeeds.
+- Raw songs: a `song.yml` can name a ready-made pdf with `raw:`; it is
+  delivered as is to the `raw/` folder.
+
+### Changed
+
+- `structure` is optional in `song.yml`: a song without a structure gets no
+  generated pdf (it is not usable in a book).
+
 ## [0.0.41]
 
 ### Added

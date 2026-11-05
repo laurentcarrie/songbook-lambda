@@ -22,6 +22,8 @@ pub mod mp3render;
 pub mod pdf;
 /// Standalone cropped PDF of one LilyPond file (`.pdf`).
 pub mod pdfoflilypond;
+/// Ready-made pdf node (`raw` in `song.yml`).
+pub mod rawfile;
 /// TikZ chord chart node (`song.tikz`).
 pub mod songtikz;
 /// Song root node that expands `song.yml` into the build graph.
@@ -45,6 +47,7 @@ pub use mp3::Mp3;
 pub use mp3render::Mp3Render;
 pub use pdf::PdfFile;
 pub use pdfoflilypond::PdfOfLilypond;
+pub use rawfile::RawFile;
 pub use songtikz::SongTikz;
 pub use songyml::SongYml;
 pub use strudel::StrudelFile;

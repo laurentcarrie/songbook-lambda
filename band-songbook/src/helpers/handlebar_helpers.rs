@@ -64,9 +64,9 @@ pub fn max_number_of_bars_helper(
 
     let mut max = 0;
     for row in rows {
-        let row = row.as_str().ok_or(RenderErrorReason::Other(
-            "row is not a string".to_string(),
-        ))?;
+        let row = row
+            .as_str()
+            .ok_or(RenderErrorReason::Other("row is not a string".to_string()))?;
         let count = parse(row)
             .map_err(|e| RenderErrorReason::Other(e.to_string()))?
             .bars
@@ -335,15 +335,18 @@ fn rows_and_index(h: &Helper) -> Result<(Vec<String>, usize), RenderError> {
     let rows: Vec<String> = h
         .param(0)
         .and_then(|v| v.value().as_array())
-        .ok_or(RenderErrorReason::Other("missing rows parameter".to_string()))?
+        .ok_or(RenderErrorReason::Other(
+            "missing rows parameter".to_string(),
+        ))?
         .iter()
         .map(|v| v.as_str().unwrap_or("").to_string())
         .collect();
     let index = h
         .param(1)
         .and_then(|v| v.value().as_u64())
-        .ok_or(RenderErrorReason::Other("missing index parameter".to_string()))?
-        as usize;
+        .ok_or(RenderErrorReason::Other(
+            "missing index parameter".to_string(),
+        ))? as usize;
     Ok((rows, index))
 }
 
@@ -387,7 +390,11 @@ pub fn repeat_marks_helper(
     let bars = row_bar_counts(&rows);
     let nrows = block.last - block.first + 1;
     let block_bars: usize = bars[block.first..=block.last].iter().sum();
-    let width = bars[block.first..=block.last].iter().copied().max().unwrap_or(1);
+    let width = bars[block.first..=block.last]
+        .iter()
+        .copied()
+        .max()
+        .unwrap_or(1);
     let before_last = block_bars - bars[block.last];
 
     // bar numbers of the further passes, on the cells of the block
@@ -560,7 +567,10 @@ mod tests {
         let result = handlebars.render_template(template, &data).unwrap();
         // passes 2 and 3 reuse the 2 cells: offsets 2..5
         for offset in 2..6 {
-            assert!(result.contains(&format!("{{\\barcount + {offset}}}")), "{result}");
+            assert!(
+                result.contains(&format!("{{\\barcount + {offset}}}")),
+                "{result}"
+            );
         }
         assert!(result.contains("\\foreach \\rep in {1,...,3}"));
         assert!(!result.contains("brace"));
@@ -573,9 +583,16 @@ mod tests {
         register_helpers(&mut handlebars);
         let data = serde_json::json!({"rows": ["A|B", "C|D|x2,2"]});
         // no mark on the first row of the block
-        let first = handlebars.render_template("{{{repeat_marks rows 0}}}", &data).unwrap();
+        let first = handlebars
+            .render_template("{{{repeat_marks rows 0}}}", &data)
+            .unwrap();
         assert_eq!(first, "");
-        let result = handlebars.render_template("{{{repeat_marks rows 1}}}|{{repeat_extra_bars rows 1}}", &data).unwrap();
+        let result = handlebars
+            .render_template(
+                "{{{repeat_marks rows 1}}}|{{repeat_extra_bars rows 1}}",
+                &data,
+            )
+            .unwrap();
         // second pass: row 0 bars are 2,3 (one row above), row 1 bars are 4,5
         assert!(result.contains("{\\barcount + 2}\\coordinate (BAR_\\barnum) at (\\columnleft + 0*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + 1*\\yr)"), "{result}");
         assert!(result.contains("{\\barcount + 5}\\coordinate (BAR_\\barnum) at (\\columnleft + 1*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + 0*\\yr)"), "{result}");
