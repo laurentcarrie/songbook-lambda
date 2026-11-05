@@ -27,7 +27,7 @@ fn absolute_beat(click: &Click) -> u32 {
 ///
 /// Returns an error string if a `section_id` cannot be found.
 pub fn resolve(raw: &RawClicksDefinition, song: Option<&Song>) -> Result<ClicksDefinition, String> {
-    let bar_map = song.map(|s| barcount_map_of_structure(&s.structure));
+    let bar_map = song.map(|s| barcount_map_of_structure(s.structure()));
 
     let clicks = raw
         .clicks
@@ -342,7 +342,7 @@ mod tests {
                 external_id: None,
             },
             meta: Default::default(),
-            structure: vec![
+            structure: Some(vec![
                 StructureItem {
                     id: "intro".to_string(),
                     item: SectionItem::Chords(ChordsSection {
@@ -365,7 +365,8 @@ mod tests {
                         drum_sequence: None,
                     }),
                 },
-            ],
+            ]),
+            raw: None,
         };
 
         let raw = RawClicksDefinition {
@@ -420,7 +421,8 @@ mod tests {
                 external_id: None,
             },
             meta: Default::default(),
-            structure: vec![],
+            structure: Some(vec![]),
+            raw: None,
         };
         let result = resolve(&raw, Some(&song));
         assert!(result.is_err());

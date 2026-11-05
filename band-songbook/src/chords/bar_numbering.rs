@@ -111,7 +111,11 @@ mod tests {
         let r = rows(&["A|B", "C|D|x2,2", "E|F"]);
         assert_eq!(
             repeat_block(&r, 1),
-            Some(RepeatBlock { n: 2, first: 0, last: 1 })
+            Some(RepeatBlock {
+                n: 2,
+                first: 0,
+                last: 1
+            })
         );
         assert_eq!(repeat_block(&r, 0), None);
         // row 1 adds its 2 bars + 1 extra pass of the 4-bar block

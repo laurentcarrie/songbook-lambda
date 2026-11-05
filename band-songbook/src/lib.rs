@@ -12,13 +12,15 @@ pub mod nodes;
 pub mod settings;
 /// S3 and local filesystem storage operations.
 pub mod storage;
+/// The `world.yml` index of the delivered songs and books.
+pub mod world_index;
 
 pub use discover::{discover, discover_books};
 pub use nodes::PdfFile;
 
 use model::{Book, BookItem, SectionItem, Song, World, WorldItem};
 use nodes::bookyml::BOOKS_DIR;
-use nodes::{BookSong, BookYml, ClickDef, ClickYml, CopyFile, SongYml, TexFile};
+use nodes::{BookSong, BookYml, ClickDef, ClickYml, CopyFile, RawFile, SongYml, TexFile};
 use object_store::ObjectStoreExt;
 use std::path::{Path, PathBuf};
 
@@ -249,6 +251,7 @@ pub fn make_all(
         "mp3-with-clicks",
         "clicks",
         "pdf-snippets",
+        "raw",
     ] {
         let sub_dir = sandbox.join(dir);
         if let Err(e) = std::fs::create_dir_all(&sub_dir) {
@@ -259,6 +262,8 @@ pub fn make_all(
     // Directory and PDF node of every song that made it into the graph, by
     // normalized stem, so the books below can collate them.
     let mut built_songs = std::collections::HashMap::new();
+    // Songs without a structure: no pdf of their own, so not usable in a book
+    let mut raw_only_songs = std::collections::HashSet::new();
 
     for (rel_path, item) in &world.items {
         let song = match item {
@@ -274,6 +279,29 @@ pub fn make_all(
             if !fuzzy_match(&search_str, &pat.to_lowercase()) {
                 continue;
             }
+        }
+
+        // A song without a structure gets no generated pdf; its `raw` pdf, if
+        // any, is delivered as is to the raw folder.
+        if song.structure.is_none() {
+            raw_only_songs.insert(song.info.file_stem_of_song());
+            if let Some(raw) = &song.raw {
+                let raw_node = RawFile::new(parent_dir.join(raw));
+                if let Ok(raw_idx) = g.add_root_node(raw_node) {
+                    let delivery_name = format!("../raw/{raw}");
+                    let copy_node =
+                        CopyFile::new(Path::new(&delivery_name).to_path_buf(), "raw".to_string());
+                    if let Ok(copy_idx) = g.add_node(copy_node) {
+                        g.add_edge(raw_idx, copy_idx);
+                    }
+                }
+            } else {
+                log::warn!(
+                    "{}: no structure and no raw pdf, nothing to build",
+                    rel_path.display()
+                );
+            }
+            continue;
         }
 
         // Create SongYml node
@@ -324,7 +352,7 @@ pub fn make_all(
         }
 
         // Add lyrics files as root nodes for each Chords and Ref section
-        for item in &song.structure {
+        for item in song.structure() {
             match &item.item {
                 SectionItem::Chords(_) | SectionItem::Ref(_) => {
                     let lyrics_path = parent_dir.join("lyrics").join(format!("{}.tex", item.id));
@@ -422,6 +450,13 @@ pub fn make_all(
                         title: info.title.clone(),
                     });
                     song_pdf_indices.push(*pdf_idx);
+                }
+                None if raw_only_songs.contains(stem) => {
+                    log::error!(
+                        "{}: song '{stem}' has no structure, it cannot be in a book",
+                        rel_path.display()
+                    );
+                    return (false, g);
                 }
                 None if known_songs.contains(stem) => {
                     log::info!(
@@ -663,6 +698,21 @@ pub async fn make_all_with_storage(
         &world,
     );
 
+    // The index of the delivery, delivered next to pdf/
+    if success {
+        match world_index::world_index_yaml(&world) {
+            Ok(yaml) => {
+                if let Err(e) = std::fs::write(sandbox.join(world_index::WORLD_INDEX_FILE), yaml) {
+                    return Err(format!(
+                        "Failed to write {}: {e}",
+                        world_index::WORLD_INDEX_FILE
+                    ));
+                }
+            }
+            Err(e) => return Err(format!("Failed to serialize world index: {e}")),
+        }
+    }
+
     // Helper function to collect files recursively
     fn collect_files_recursive(dir: &std::path::Path, files: &mut Vec<std::path::PathBuf>) {
         if let Ok(entries) = std::fs::read_dir(dir) {
@@ -695,11 +745,17 @@ pub async fn make_all_with_storage(
             "mp3-with-clicks",
             "clicks",
             "pdf-snippets",
+            "raw",
         ] {
             let sub_dir = sandbox.join(dir);
             if sub_dir.exists() {
                 collect_files_recursive(&sub_dir, &mut delivery_files);
             }
+        }
+
+        let index_file = sandbox.join(world_index::WORLD_INDEX_FILE);
+        if index_file.is_file() {
+            delivery_files.push(index_file);
         }
 
         log::info!(
@@ -712,6 +768,15 @@ pub async fn make_all_with_storage(
         std::fs::create_dir_all(local_delivery)
             .map_err(|e| format!("Failed to create delivery directory: {e}"))?;
 
+        let index_file = sandbox.join(world_index::WORLD_INDEX_FILE);
+        if index_file.is_file() {
+            std::fs::copy(
+                &index_file,
+                local_delivery.join(world_index::WORLD_INDEX_FILE),
+            )
+            .map_err(|e| format!("Failed to copy world.yml to delivery: {e}"))?;
+        }
+
         for subdir in &[
             "pdf",
             "pdf-lyrics-1-column",
@@ -722,6 +787,7 @@ pub async fn make_all_with_storage(
             "mp3-with-clicks",
             "clicks",
             "pdf-snippets",
+            "raw",
         ] {
             let src_dir = sandbox.join(subdir);
             if !src_dir.exists() {

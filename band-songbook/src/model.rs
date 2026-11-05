@@ -13,7 +13,20 @@ pub struct Song {
     #[serde(default)]
     pub meta: SongMeta,
     /// Ordered list of sections that make up the song structure.
-    pub structure: Vec<StructureItem>,
+    /// Optional: a song without a structure gets no generated pdf.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structure: Option<Vec<StructureItem>>,
+    /// Name of a ready-made pdf file, next to `song.yml`, that is copied as is
+    /// to the `raw` folder of the delivery.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw: Option<String>,
+}
+
+impl Song {
+    /// The sections of the song, empty when `structure` is missing.
+    pub fn structure(&self) -> &[StructureItem] {
+        self.structure.as_deref().unwrap_or(&[])
+    }
 }
 
 /// Source file references for a song.
@@ -393,7 +406,10 @@ mod tests {
             "title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\nexternal_id: !Deezer \"3135556\"\n",
         )
         .unwrap();
-        assert_eq!(info.external_id, Some(ExternalId::Deezer("3135556".to_string())));
+        assert_eq!(
+            info.external_id,
+            Some(ExternalId::Deezer("3135556".to_string()))
+        );
 
         let info: SongInfo = serde_yaml::from_str(
             "title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\nexternal_id: !Youtube \"dQw4w9WgXcQ\"\n",
@@ -408,9 +424,10 @@ mod tests {
     #[test]
     fn test_external_id_is_optional() {
         // songs written before the field exists must still parse
-        let info: SongInfo =
-            serde_yaml::from_str("title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\n")
-                .unwrap();
+        let info: SongInfo = serde_yaml::from_str(
+            "title: Dress\nauthor: P.J. Harvey\ntempo: 96\ntime_signature: null\n",
+        )
+        .unwrap();
         assert_eq!(info.external_id, None);
     }
 

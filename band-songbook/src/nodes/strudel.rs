@@ -38,7 +38,7 @@ impl GNode for StrudelFile {
     }
 
     fn build(&self, sandbox: &Path, _predecessors: &[&(dyn GNode + Send + Sync)]) -> bool {
-        let sequence = strudel_sequence_of_song(&self.song.structure, self.song.info.tempo);
+        let sequence = strudel_sequence_of_song(self.song.structure(), self.song.info.tempo);
 
         let dest = sandbox.join(&self.path);
         if let Some(parent) = dest.parent()
