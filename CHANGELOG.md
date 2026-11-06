@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.45]
+
+### Added
+
+- `world.yml`: each song carries its `tempo` (beats per minute, from `song.yml`).
+
 ## [0.0.44]
 
 ### Added
