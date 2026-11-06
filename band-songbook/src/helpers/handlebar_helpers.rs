@@ -284,16 +284,21 @@ pub fn row_multiplier_helper(
 /// Writes a TikZ coordinate `BAR_<n>` for each of `count` consecutive bars.
 /// `n` is the running `\barcount` plus the bar's offset, so the names match
 /// the bar numbers printed on the chart. `center(k)` is the TikZ point of the
-/// k-th bar.
+/// k-th bar. `size` is the width and height of the cell, as pgfmath
+/// expressions in cm: `\recordbar` stores them with the position (see
+/// preamble.tex).
 fn write_bar_coordinates(
     count: usize,
     center: impl Fn(usize) -> String,
+    size: (&str, &str),
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     for k in 0..count {
         out.write(&format!(
-            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\n",
-            center(k)
+            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\\recordbar{{\\barnum}}{{{}}}{{{}}}\n",
+            center(k),
+            size.0,
+            size.1
         ))?;
     }
     Ok(())
@@ -326,6 +331,7 @@ pub fn bar_coordinates_helper(
                 k
             )
         },
+        ("\\xr", "\\yr"),
         out,
     )
 }
@@ -404,7 +410,7 @@ pub fn repeat_marks_helper(
             for m in 0..bars[row] {
                 let offset = pass * block_bars + before + m - before_last;
                 out.write(&format!(
-                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\n",
+                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\\recordbar{{\\barnum}}{{\\xr}}{{\\yr}}\n",
                     nrows - 1 - i
                 ))?;
             }
@@ -444,6 +450,7 @@ pub fn ref_bar_coordinates_helper(
     write_bar_coordinates(
         count.max(0) as usize,
         |_| "\\columnleft + 2*\\xr, \\currentline - 0.25*\\yr".to_string(),
+        ("2*\\xr", "\\yr/2"),
         out,
     )
 }

@@ -257,6 +257,26 @@ fn test_make_all() {
         pdf2.exists(),
         "songs/mademoiselle_K/ca_me_vexe/main.pdf should be created"
     );
+
+    // The page position of every bar is delivered with the PDF
+    let cells = sandbox
+        .path()
+        .join("pdfcellpositions/mademoiselle_k--@--ca_me_vexe.yml");
+    let yaml = std::fs::read_to_string(&cells).expect("pdfcellpositions file should exist");
+    let doc: serde_yaml::Value = serde_yaml::from_str(&yaml).expect("cell positions are YAML");
+    let page_height = doc["page_height_pt"].as_f64().expect("page height");
+    let cells = doc["cells"].as_sequence().expect("list of cells");
+    assert!(cells.len() > 100, "every played bar has a cell");
+    let first = &cells[0];
+    assert_eq!(first["bar"].as_u64(), Some(1));
+    assert_eq!(first["page"].as_u64(), Some(1));
+    for key in ["x", "y", "w", "h"] {
+        assert!(first[key].as_f64().is_some(), "cell has {key}");
+    }
+    for cell in cells {
+        let bottom = cell["y"].as_f64().unwrap() + cell["h"].as_f64().unwrap();
+        assert!(bottom <= page_height, "cell {cell:?} is on the page");
+    }
 }
 
 #[test]

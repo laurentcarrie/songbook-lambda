@@ -101,6 +101,64 @@
 % works too. song.tikz defines one BAR_<n> coordinate per bar.
 \newcommand*{\BAR}[1]{BAR_\the\numexpr#1\relax}
 
+% --- Page position of every bar, for the apk -------------------------------
+% A song whose main.tex defines \writesongcells (books do not) writes cells.yml
+% next to its PDF: for each BAR_<n> of song.tikz, the cell it sits on, in PDF
+% points (1/72 inch, as in the PDF) from the top-left corner of the page. song.tikz calls \recordbar as
+% it defines the coordinates, and \songplacechart, which scales the chart box
+% to the text width, converts them to page positions.
+\newsavebox{\songchartbox}
+\newwrite\songcellsfile
+\newdimen\songdx \newdimen\songdy \newdimen\songdw \newdimen\songdh
+\gdef\songcellrecords{}
+\gdef\songminx{0pt}
+\gdef\songminy{0pt}
+\makeatletter
+% \recordbar{n}{w}{h}: remember the center of BAR_n and the size of its cell
+% (w and h are pgfmath expressions, in cm).
+\newcommand*{\recordbar}[3]{%
+  \ifdefined\writesongcells
+    \pgfpointanchor{BAR_#1}{center}%
+    \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \pgfmathsetlength\pgf@xb{(#2)*1cm}%
+    \pgfmathsetlength\pgf@yb{(#3)*1cm}%
+    \xdef\songcellrecords{\unexpanded\expandafter{\songcellrecords}\noexpand\songcellrecord%
+      {#1}{\the\pgf@xa}{\the\pgf@ya}{\the\pgf@xb}{\the\pgf@yb}}%
+  \fi}
+% Bounding box of the picture, read just before TikZ closes it.
+\newcommand*{\songendpicture}{%
+  \xdef\songminx{\the\pgf@picminx}\xdef\songminy{\the\pgf@picminy}}
+% \songcellrecord{n}{x}{y}{w}{h}: x y is the center in the picture, w h the size.
+% Written with the position \songplacechart saved with \savepos.
+\newcommand*{\songcellrecord}[5]{%
+  \pgfmathsetlength\songdx{\songscale*(#2-\songminx-#4/2)}%
+  \pgfmathsetlength\songdy{\songscale*(#3-\songminy+#5/2)}%
+  \pgfmathsetlength\songdw{\songscale*#4}%
+  \pgfmathsetlength\songdh{\songscale*#5}%
+  \edef\songwrite{\noexpand\write\songcellsfile{%
+    - bar: #1^^J%
+    \space\space page: \noexpand\thepage^^J%
+    \space\space x: \noexpand\strip@pt\noexpand\dimexpr(\noexpand\lastxpos sp+\the\songdx)*7200/7227\noexpand\relax^^J%
+    \space\space y: \noexpand\strip@pt\noexpand\dimexpr(\the\paperheight-\noexpand\lastypos sp-\the\songdy)*7200/7227\noexpand\relax^^J%
+    \space\space w: \strip@pt\dimexpr\songdw*7200/7227\relax^^J%
+    \space\space h: \strip@pt\dimexpr\songdh*7200/7227\relax}}%
+  \songwrite}
+\newcommand*{\songplacechart}{%
+  \ifdefined\writesongcells
+    \pgfmathsetmacro{\songscale}{min(1,\the\textwidth/\the\wd\songchartbox)}%
+    \immediate\openout\songcellsfile=cells.yml
+    \immediate\write\songcellsfile{page_width_pt: \strip@pt\dimexpr\paperwidth*7200/7227\relax^^J%
+      page_height_pt: \strip@pt\dimexpr\paperheight*7200/7227\relax^^Jcells:}%
+    \noindent\savepos
+    \scalebox{\songscale}{\usebox{\songchartbox}}%
+    \songcellrecords
+    \gdef\songcellrecords{}%
+  \else
+    \pgfmathsetmacro{\songscale}{min(1,\the\textwidth/\the\wd\songchartbox)}%
+    \noindent\scalebox{\songscale}{\usebox{\songchartbox}}%
+  \fi}
+\makeatother
+
 % Name of the chord-chart coordinate of section #1 (its id in song.yml), for
 % add.tikz: \path (\SECTION{refrain1}) ... It sits on the right edge of the
 % section's bar grid, halfway down the section.
