@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.44]
+
+### Added
+
+- `world.yml`: each song lists its delivered mp3 files (`mp3`: `name` and `path`),
+  the recording (`mp3/<id>.mp3`) and the renders (`mp3-renders/<id>-<name>.mp3`).
+
 ## [0.0.43]
 
 ### Added

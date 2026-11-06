@@ -35,6 +35,38 @@ pub struct SongEntry {
     /// `raw/<file>` for a song that only has a ready-made pdf).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pdf: Option<String>,
+    /// Delivered mp3 files of the song: the recording and the renders.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mp3: Vec<Mp3Entry>,
+}
+
+/// One mp3 of a song.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Mp3Entry {
+    /// What it is: `song` for the recording, the score name for a render.
+    pub name: String,
+    /// Delivered file, relative to the delivery root (`mp3/<id>.mp3`, or
+    /// `mp3-renders/<id>-<name>.mp3` for a render).
+    pub path: String,
+}
+
+/// The mp3 files delivered for a song, as declared in its `song.yml`.
+fn mp3_entries(id: &str, song: &crate::model::Song) -> Vec<Mp3Entry> {
+    let mut out = vec![];
+    if song.files.has_mp3 {
+        out.push(Mp3Entry {
+            name: "song".to_string(),
+            path: format!("mp3/{id}.mp3"),
+        });
+    }
+    for declared in &song.files.mp3 {
+        let stem = declared.strip_suffix(".mp3").unwrap_or(declared);
+        out.push(Mp3Entry {
+            name: stem.to_string(),
+            path: format!("mp3-renders/{id}-{stem}.mp3"),
+        });
+    }
+    out
 }
 
 /// One book of the index.
@@ -63,12 +95,14 @@ pub fn world_index(world: &World) -> WorldIndex {
                 } else {
                     song.raw.as_ref().map(|raw| format!("raw/{raw}"))
                 };
+                let mp3 = mp3_entries(&id, song);
                 Some(SongEntry {
                     id,
                     author: song.info.author.clone(),
                     title: song.info.title.clone(),
                     tags: song.info.tags.clone(),
                     pdf,
+                    mp3,
                 })
             }
             WorldItem::Error(_) => None,
@@ -118,6 +152,15 @@ mod tests {
         let raw_only = song(
             "files: {}\ninfo: {title: Yesterday, author: Beatles, tempo: 90}\nraw: yesterday.pdf\n",
         );
+        let with_mp3 = song(
+            "files: {has_mp3: true, mp3: [intro.mp3, solo]}\ninfo: {title: Dress, author: P.J. Harvey, tempo: 96}\nstructure: []\n",
+        );
+        let mp3 = mp3_entries("id", &with_mp3);
+        assert_eq!(
+            mp3.iter().map(|m| m.path.as_str()).collect::<Vec<_>>(),
+            vec!["mp3/id.mp3", "mp3-renders/id-intro.mp3", "mp3-renders/id-solo.mp3"]
+        );
+        assert_eq!(mp3[1].name, "intro");
         let book: Book = serde_yaml::from_str("name: Rock\nsongs: [a]\n").unwrap();
         let world = World {
             items: vec![
