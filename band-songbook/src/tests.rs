@@ -270,6 +270,7 @@ fn test_make_all() {
     let first = &cells[0];
     assert_eq!(first["bar"].as_u64(), Some(1));
     assert_eq!(first["page"].as_u64(), Some(1));
+    assert_eq!(first["section"].as_str(), Some("intro"));
     for key in ["x", "y", "w", "h"] {
         assert!(first[key].as_f64().is_some(), "cell has {key}");
     }

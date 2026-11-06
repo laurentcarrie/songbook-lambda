@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chord chart in `delivery/pdf/<song>.pdf`, so a viewer can locate bar `n`.
   `page_width_pt` and `page_height_pt` give the page size; each entry of `cells`
   has `bar` (the number printed on the chart, one entry per played bar, repeats
-  included), `page`, and the cell rectangle `x`, `y`, `w`, `h`, in PDF points
+  included), `page`, `section` (the title of its section), and the cell rectangle
+  `x`, `y`, `w`, `h`, in PDF points
   (1/72 inch) from the top-left corner of the page. A bar of a reference
   section (`refrain 3`) is the whole box of the reference.
 

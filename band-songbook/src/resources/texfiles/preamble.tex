@@ -111,6 +111,7 @@
 \newwrite\songcellsfile
 \newdimen\songdx \newdimen\songdy \newdimen\songdw \newdimen\songdh
 \gdef\songcellrecords{}
+\gdef\cursection{}
 \gdef\songminx{0pt}
 \gdef\songminy{0pt}
 \makeatletter
@@ -123,14 +124,16 @@
     \pgfmathsetlength\pgf@xb{(#2)*1cm}%
     \pgfmathsetlength\pgf@yb{(#3)*1cm}%
     \xdef\songcellrecords{\unexpanded\expandafter{\songcellrecords}\noexpand\songcellrecord%
-      {#1}{\the\pgf@xa}{\the\pgf@ya}{\the\pgf@xb}{\the\pgf@yb}}%
+      {#1}{\the\pgf@xa}{\the\pgf@ya}{\the\pgf@xb}{\the\pgf@yb}%
+      {\detokenize\expandafter{\cursection}}}%
   \fi}
 % Bounding box of the picture, read just before TikZ closes it.
 \newcommand*{\songendpicture}{%
   \xdef\songminx{\the\pgf@picminx}\xdef\songminy{\the\pgf@picminy}}
-% \songcellrecord{n}{x}{y}{w}{h}: x y is the center in the picture, w h the size.
+% \songcellrecord{n}{x}{y}{w}{h}{section}: x y is the center in the picture,
+% w h the size, section the title of the section the bar belongs to.
 % Written with the position \songplacechart saved with \savepos.
-\newcommand*{\songcellrecord}[5]{%
+\newcommand*{\songcellrecord}[6]{%
   \pgfmathsetlength\songdx{\songscale*(#2-\songminx-#4/2)}%
   \pgfmathsetlength\songdy{\songscale*(#3-\songminy+#5/2)}%
   \pgfmathsetlength\songdw{\songscale*#4}%
@@ -141,7 +144,8 @@
     \space\space x: \noexpand\strip@pt\noexpand\dimexpr(\noexpand\lastxpos sp+\the\songdx)*7200/7227\noexpand\relax^^J%
     \space\space y: \noexpand\strip@pt\noexpand\dimexpr(\the\paperheight-\noexpand\lastypos sp-\the\songdy)*7200/7227\noexpand\relax^^J%
     \space\space w: \strip@pt\dimexpr\songdw*7200/7227\relax^^J%
-    \space\space h: \strip@pt\dimexpr\songdh*7200/7227\relax}}%
+    \space\space h: \strip@pt\dimexpr\songdh*7200/7227\relax^^J%
+    \space\space section: "#6"}}%
   \songwrite}
 \newcommand*{\songplacechart}{%
   \ifdefined\writesongcells
