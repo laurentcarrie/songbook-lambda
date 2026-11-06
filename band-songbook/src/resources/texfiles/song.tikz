@@ -16,8 +16,11 @@
 %\tikzset{declare
 %function={Gauss(\x,mu,\sig)=1/(\sig*sqrt(2*pi))*exp(-0.5*((\x-\mu)/\sig)^2);}}
 
-\begin{adjustbox}{max width=\textwidth}
-\begin{tikzpicture}[]
+% The chart is typeset into a box and scaled down to the text width by
+% \songplacechart (the job adjustbox did, which hides the scale): that macro
+% also writes the page position of every bar to cells.yml.
+\begin{lrbox}{\songchartbox}
+\begin{tikzpicture}[execute at end picture=\songendpicture]
     \usetikzlibrary{arrows.meta}
 
     % size of a cell
@@ -83,6 +86,9 @@
     % Structure items
 {{#each song.structure}}
 {{#if this.item.Chords}}
+    \gdef\cursection{%
+        {{{this.item.Chords.title}}}%
+    }
     \coordinate (A) at (\columnleft, \currentline);
 {{#each this.item.Chords.rows}}
     \coordinate (A1) at (\columnleft + \xr * {{number_of_bars this}}, \currentline);
@@ -102,6 +108,9 @@
     \tikzmath{\currentline = \currentline - \spacebetweensections;}
 {{/if}}
 {{#if this.item.Ref}}
+    \gdef\cursection{%
+        {{{this.item.Ref.title}}}%
+    }
     \node[anchor=east] at (\columnleft + \xr - 0.02, \currentline - 0.35*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
     \draw[draw=black, fill={{this.item.Ref.color}}] (\columnleft + \xr, \currentline) rectangle ++(2*\xr, -\yr/2) node[midway] { {{{this.item.Ref.title}}} };
 {{{ref_bar_coordinates this.item.Ref.link @root.song.structure}}}
@@ -124,4 +133,5 @@
     \end{scope}
 
 \end{tikzpicture}
-\end{adjustbox}
+\end{lrbox}
+\songplacechart

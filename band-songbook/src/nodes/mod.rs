@@ -1,5 +1,7 @@
 /// Book root node that expands `books/<name>.yml` into the book build graph.
 pub mod bookyml;
+/// Node that delivers the page position of every bar of a song PDF.
+pub mod cellpositions;
 /// Node that overlays click sounds onto a song MP3 for verification.
 pub mod clickcheckmp3;
 /// Clicks definition node with beat-level click events.
@@ -36,6 +38,7 @@ pub mod tex;
 pub mod texoflilypond;
 
 pub use bookyml::{BookSong, BookYml};
+pub use cellpositions::CellPositions;
 pub use clickcheckmp3::ClickCheckMp3;
 pub use clickdef::ClickDef;
 pub use clickyml::ClickYml;

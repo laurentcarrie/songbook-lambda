@@ -243,6 +243,7 @@ impl GRootNode for SongYml {
         let tex_content = r#"\documentclass{article}
 \PassOptionsToPackage{x11names}{xcolor}
 \usepackage{tikz}
+\def\writesongcells{}
 \input{preamble}
 \input{chords}
 \input{sections}

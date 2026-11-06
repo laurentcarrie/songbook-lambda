@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.46]
+
+### Added
+
+- `delivery/pdfcellpositions/<song>.yml`: the page position of every bar of the
+  chord chart in `delivery/pdf/<song>.pdf`, so a viewer can locate bar `n`.
+  `page_width_pt` and `page_height_pt` give the page size; each entry of `cells`
+  has `bar` (the number printed on the chart, one entry per played bar, repeats
+  included), `page`, `section` (the title of its section), and the cell rectangle
+  `x`, `y`, `w`, `h`, in PDF points
+  (1/72 inch) from the top-left corner of the page. A bar of a reference
+  section (`refrain 3`) is the whole box of the reference.
+
+### Changed
+
+- The chord chart is scaled to the text width by the build instead of
+  `adjustbox`; the layout is unchanged.
+
 ## [0.0.45]
 
 ### Added

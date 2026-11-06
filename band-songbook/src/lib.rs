@@ -20,7 +20,9 @@ pub use nodes::PdfFile;
 
 use model::{Book, BookItem, SectionItem, Song, World, WorldItem};
 use nodes::bookyml::BOOKS_DIR;
-use nodes::{BookSong, BookYml, ClickDef, ClickYml, CopyFile, RawFile, SongYml, TexFile};
+use nodes::{
+    BookSong, BookYml, CellPositions, ClickDef, ClickYml, CopyFile, RawFile, SongYml, TexFile,
+};
 use object_store::ObjectStoreExt;
 use std::path::{Path, PathBuf};
 
@@ -385,6 +387,13 @@ pub fn make_all(
             g.add_edge(pdf_idx, pdf_copy_idx);
         }
 
+        // Page position of every bar, written by the lualatex run of main.pdf
+        let cells_path =
+            Path::new("../pdfcellpositions").join(format!("{}.yml", song.info.file_stem_of_song()));
+        if let Ok(cells_idx) = g.add_node(CellPositions::new(cells_path)) {
+            g.add_edge(pdf_idx, cells_idx);
+        }
+
         // Create lyrics PdfFile nodes (1-column and 2-column)
         for (filename, delivery_dir) in [
             ("main-1col.pdf", "pdf-lyrics-1-column"),
@@ -745,6 +754,7 @@ pub async fn make_all_with_storage(
             "mp3-with-clicks",
             "clicks",
             "pdf-snippets",
+            "pdfcellpositions",
             "raw",
         ] {
             let sub_dir = sandbox.join(dir);
@@ -787,6 +797,7 @@ pub async fn make_all_with_storage(
             "mp3-with-clicks",
             "clicks",
             "pdf-snippets",
+            "pdfcellpositions",
             "raw",
         ] {
             let src_dir = sandbox.join(subdir);
