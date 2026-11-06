@@ -31,6 +31,8 @@ pub struct SongEntry {
     pub title: String,
     /// Free-form tags.
     pub tags: Vec<String>,
+    /// Tempo in beats per minute, as declared in `song.yml`.
+    pub tempo: u16,
     /// Delivered pdf, relative to the delivery root (`pdf/<id>.pdf`, or
     /// `raw/<file>` for a song that only has a ready-made pdf).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -101,6 +103,7 @@ pub fn world_index(world: &World) -> WorldIndex {
                     author: song.info.author.clone(),
                     title: song.info.title.clone(),
                     tags: song.info.tags.clone(),
+                    tempo: song.info.tempo,
                     pdf,
                     mp3,
                 })
@@ -183,6 +186,8 @@ mod tests {
             Some(format!("pdf/{}.pdf", index.songs[0].id).as_str())
         );
         assert_eq!(index.songs[1].pdf.as_deref(), Some("raw/yesterday.pdf"));
+        assert_eq!(index.songs[0].tempo, 96);
+        assert_eq!(index.songs[1].tempo, 90);
         assert_eq!(index.books.len(), 1);
         assert_eq!(index.books[0].pdf, "pdf/book-rock.pdf");
         let yaml = world_index_yaml(&world).unwrap();
