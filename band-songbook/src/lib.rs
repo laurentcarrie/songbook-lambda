@@ -4,6 +4,7 @@ pub mod chords;
 pub mod discover;
 /// Handlebars template helpers and song-to-sequence conversion.
 pub mod helpers;
+pub mod lyrics;
 /// Data model for songs, sections, chords, and drum sequences.
 pub mod model;
 /// Build graph nodes for the yamake dependency system.
@@ -709,7 +710,7 @@ pub async fn make_all_with_storage(
 
     // The index of the delivery, delivered next to pdf/
     if success {
-        match world_index::world_index_yaml(&world) {
+        match world_index::world_index_yaml_in(&world, &local_srcdir) {
             Ok(yaml) => {
                 if let Err(e) = std::fs::write(sandbox.join(world_index::WORLD_INDEX_FILE), yaml) {
                     return Err(format!(

@@ -344,15 +344,17 @@ fn write_bar_coordinates(
     center: impl Fn(usize) -> String,
     size: (&str, &str),
     chords: &[String],
+    lyrics: &[String],
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     for k in 0..count {
         out.write(&format!(
-            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\\recordbar{{\\barnum}}{{{}}}{{{}}}{{{}}}\n",
+            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\\recordbar{{\\barnum}}{{{}}}{{{}}}{{{}}}{{\\detokenize{{{}}}}}\n",
             center(k),
             size.0,
             size.1,
-            chords.get(k).map(String::as_str).unwrap_or("")
+            chords.get(k).map(String::as_str).unwrap_or(""),
+            lyrics.get(k).map(String::as_str).unwrap_or("")
         ))?;
     }
     Ok(())
@@ -377,6 +379,14 @@ pub fn bar_coordinates_helper(
 
     let parsed = parse(input).map_err(|e| RenderErrorReason::Other(e.to_string()))?;
     let nbars = parsed.bars.len();
+    // the lyrics of this row's bars: params 1 (lyrics of the section), 2 (its rows), 3 (index of this row)
+    let all = string_array_param(h, 1);
+    let rows = string_array_param(h, 2);
+    let index = h.param(3).and_then(|v| v.value().as_u64()).unwrap_or(0) as usize;
+    let lyrics: Vec<String> = all
+        .get(rows_before(&rows, index)..)
+        .unwrap_or_default()
+        .to_vec();
     write_bar_coordinates(
         nbars,
         |k| {
@@ -387,8 +397,30 @@ pub fn bar_coordinates_helper(
         },
         ("\\xr", "\\yr"),
         &row_chords(input),
+        &lyrics,
         out,
     )
+}
+
+/// A string array parameter (a section's `lyrics`), empty when it is missing.
+fn string_array_param(h: &Helper, i: usize) -> Vec<String> {
+    h.param(i)
+        .and_then(|v| v.value().as_array())
+        .map(|a| {
+            a.iter()
+                .map(|v| v.as_str().unwrap_or("").to_string())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Section-relative index (0-based) of the first bar of row `index`: the bars of the rows above it.
+fn rows_before(rows: &[String], index: usize) -> usize {
+    row_contributions(rows)
+        .iter()
+        .take(index)
+        .map(|c| (*c).max(0) as usize)
+        .sum()
 }
 
 /// Reads the `rows` array and the row `index` parameters of the repeat helpers.
@@ -448,6 +480,8 @@ pub fn repeat_marks_helper(
     let Some(block) = repeat_block(&rows, index) else {
         return Ok(());
     };
+    let lyrics = string_array_param(h, 2);
+    let section_before_last = rows_before(&rows, block.last);
     let bars = row_bar_counts(&rows);
     let nrows = block.last - block.first + 1;
     let block_bars: usize = bars[block.first..=block.last].iter().sum();
@@ -465,9 +499,13 @@ pub fn repeat_marks_helper(
             for m in 0..bars[row] {
                 let offset = pass * block_bars + before + m - before_last;
                 out.write(&format!(
-                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\\recordbar{{\\barnum}}{{\\xr}}{{\\yr}}{{{}}}\n",
+                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\\recordbar{{\\barnum}}{{\\xr}}{{\\yr}}{{{}}}{{\\detokenize{{{}}}}}\n",
                     nrows - 1 - i,
-                    row_chords(&rows[row]).get(m).map(String::as_str).unwrap_or("")
+                    row_chords(&rows[row]).get(m).map(String::as_str).unwrap_or(""),
+                    lyrics
+                        .get(section_before_last + offset)
+                        .map(String::as_str)
+                        .unwrap_or("")
                 ))?;
             }
             before += bars[row];
@@ -509,6 +547,7 @@ pub fn ref_bar_coordinates_helper(
         |_| "\\columnleft + 2*\\xr, \\currentline - 0.25*\\yr".to_string(),
         ("2*\\xr", "\\yr/2"),
         &ref_chords_of(h),
+        &string_array_param(h, 2),
         out,
     )
 }

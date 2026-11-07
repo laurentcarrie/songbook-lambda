@@ -115,9 +115,10 @@
 \gdef\songminx{0pt}
 \gdef\songminy{0pt}
 \makeatletter
-% \recordbar{n}{w}{h}{chords}: remember the center of BAR_n and the size of its cell
-% (w and h are pgfmath expressions, in cm), and its chords (ASCII, space separated).
-\newcommand*{\recordbar}[4]{%
+% \recordbar{n}{w}{h}{chords}{lyric}: remember the center of BAR_n and the size of its cell
+% (w and h are pgfmath expressions, in cm), its chords (ASCII, space separated) and the
+% syllable sung on its first beat (detokenized text).
+\newcommand*{\recordbar}[5]{%
   \ifdefined\writesongcells
     \pgfpointanchor{BAR_#1}{center}%
     \pgf@xa=\pgf@x \pgf@ya=\pgf@y
@@ -125,7 +126,7 @@
     \pgfmathsetlength\pgf@yb{(#3)*1cm}%
     \xdef\songcellrecords{\unexpanded\expandafter{\songcellrecords}\noexpand\songcellrecord%
       {#1}{\the\pgf@xa}{\the\pgf@ya}{\the\pgf@xb}{\the\pgf@yb}%
-      {\detokenize\expandafter{\cursection}}{#4}}%
+      {\detokenize\expandafter{\cursection}}{#4}{#5}}%
   \fi}
 % \recorddot{first}{last}: the dot of a repeat marker drawn at the coordinate REPDOT, for the
 % passes of the repeated block whose bars are first..last.
@@ -140,10 +141,10 @@
 % Bounding box of the picture, read just before TikZ closes it.
 \newcommand*{\songendpicture}{%
   \xdef\songminx{\the\pgf@picminx}\xdef\songminy{\the\pgf@picminy}}
-% \songcellrecord{n}{x}{y}{w}{h}{section}{chords}: x y is the center in the picture,
+% \songcellrecord{n}{x}{y}{w}{h}{section}{chords}{lyric}: x y is the center in the picture,
 % w h the size, section the title of the section the bar belongs to, chords the chords of the bar.
 % Written with the position \songplacechart saved with \savepos.
-\newcommand*{\songcellrecord}[7]{%
+\newcommand*{\songcellrecord}[8]{%
   \pgfmathsetlength\songdx{\songscale*(#2-\songminx-#4/2)}%
   \pgfmathsetlength\songdy{\songscale*(#3-\songminy+#5/2)}%
   \pgfmathsetlength\songdw{\songscale*#4}%
@@ -156,7 +157,8 @@
     \space\space w: \strip@pt\dimexpr\songdw*7200/7227\relax^^J%
     \space\space h: \strip@pt\dimexpr\songdh*7200/7227\relax^^J%
     \space\space section: "#6"^^J%
-    \space\space chords: "#7"}}%
+    \space\space chords: "#7"^^J%
+    \space\space lyric: "#8"}}%
   \songwrite}
 % \songdotrecord{first}{last}{x}{y}: x y is the center of the dot in the picture. Written like the cells.
 \newcommand*{\songdotrecord}[4]{%
@@ -182,6 +184,7 @@
     \songcellrecords
     \write\songcellsfile{dots:}%
     \songdotrecords
+    \write\songcellsfile{syllables:}%
     \gdef\songcellrecords{}%
     \gdef\songdotrecords{}%
   \else
@@ -288,9 +291,42 @@
 }
 
 % songworkd first beat
+% In the lyrics of a song that writes cells.yml, the k-th \songwordfb of a section is its k-th
+% bar: \songsylstart{first bar of the section} (before the lyrics of a section whose
+% \songwordfb match its bars) and \songsylstop. The position of each non-empty one goes to
+% cells.yml, under syllables:.
+\newcounter{songsylbar}
+\newif\ifsongsyl
+\newsavebox{\songsylbox}
+\newcommand*{\songsylstart}[1]{\setcounter{songsylbar}{#1}\addtocounter{songsylbar}{-1}\songsyltrue}
+\newcommand*{\songsylstop}{\songsylfalse}
+\makeatletter
+% \songrecordsyl{text}: typeset text in the box and write its page position (top left, size, PDF points)
+\newcommand*{\songrecordsyl}[1]{%
+  \sbox{\songsylbox}{\fcolorbox{black}{red!20}{#1}}%
+  \savepos
+  \edef\songwrite{\noexpand\write\songcellsfile{%
+    - bar: \thesongsylbar^^J%
+    \space\space page: \noexpand\thepage^^J%
+    \space\space x: \noexpand\strip@pt\noexpand\dimexpr\noexpand\lastxpos sp*7200/7227\noexpand\relax^^J%
+    \space\space y: \noexpand\strip@pt\noexpand\dimexpr(\the\paperheight-\noexpand\lastypos sp-\the\ht\songsylbox)*7200/7227\noexpand\relax^^J%
+    \space\space w: \strip@pt\dimexpr\wd\songsylbox*7200/7227\relax^^J%
+    \space\space h: \strip@pt\dimexpr(\ht\songsylbox+\dp\songsylbox)*7200/7227\relax}}%
+  \songwrite
+  \usebox{\songsylbox}}
+\makeatother
 \newcommand{\songwordfb}[1]{%
 	%\tikz[]\node [firstbar] (N1) {#1};%
-	\fcolorbox{black}{red!20}{#1}%
+	\stepcounter{songsylbar}%
+	\ifdefined\writesongcells
+		\ifsongsyl
+			\ifblank{#1}{\fcolorbox{black}{red!20}{#1}}{\songrecordsyl{#1}}%
+		\else
+			\fcolorbox{black}{red!20}{#1}%
+		\fi
+	\else
+		\fcolorbox{black}{red!20}{#1}%
+	\fi
 }
 
 %levee
