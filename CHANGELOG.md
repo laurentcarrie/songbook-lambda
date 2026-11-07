@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `pdfcellpositions`: each bar has a `chords` field (space separated, e.g. `G A`, `Fxm7`, `B/Dx`; `x` sharp, `b` flat, `r` rest), also for the passes of a repeat and for Ref sections, so the apk can play them.
+
 ## [0.0.47]
 
 ### Added
