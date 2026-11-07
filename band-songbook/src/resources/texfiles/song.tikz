@@ -95,8 +95,8 @@
     \coordinate (A2) at ($(A1) + (0, -\yr)$);
     \node[anchor=east] at (\columnleft - 0.02, \currentline - 0.85*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
 {{{bar_rects this ../this.item.Chords.color}}}
-{{{bar_coordinates this}}}
-{{{repeat_marks ../this.item.Chords.rows @index}}}
+{{{bar_coordinates this ../this.lyrics ../this.item.Chords.rows @index}}}
+{{{repeat_marks ../this.item.Chords.rows @index ../this.lyrics}}}
     \tikzmath{\currentline = \currentline - \yr;}
     \tikzmath{\barcount = \barcount + {{number_of_bars this}} + {{repeat_extra_bars ../this.item.Chords.rows @index}};}
 {{/each}}
@@ -113,7 +113,7 @@
     }
     \node[anchor=east] at (\columnleft + \xr - 0.02, \currentline - 0.35*\yr) { \fontsize{8pt}{8pt}\selectfont \pgfmathprintnumber[precision=0]{\barcount} };
     \draw[draw=black, fill={{this.item.Ref.color}}] (\columnleft + \xr, \currentline) rectangle ++(2*\xr, -\yr/2) node[midway] { {{{this.item.Ref.title}}} };
-{{{ref_bar_coordinates this.item.Ref.link @root.song.structure}}}
+{{{ref_bar_coordinates this.item.Ref.link @root.song.structure this.lyrics}}}
     \coordinate (SECTION_{{this.id}}) at (\columnleft + 3*\xr, \currentline - 0.25*\yr);
     \tikzmath{\currentline = \currentline - \yr/2;}
     \tikzmath{\currentline = \currentline - \spacebetweensections;}

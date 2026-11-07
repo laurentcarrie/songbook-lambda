@@ -190,13 +190,39 @@ impl GRootNode for SongYml {
         song.structure = Some(structure);
 
         // Convert Song to JSON for handlebars templates
-        let song_data = match serde_json::to_value(&song) {
+        let mut song_data = match serde_json::to_value(&song) {
             Ok(data) => data,
             Err(e) => {
                 log::error!("Failed to serialize song data: {e}");
                 return Err(ExpandError::Other(e.to_string()));
             }
         };
+
+        // The lyric of each bar of the sections that have lyrics (see lyrics.rs), for cells.yml
+        let lyrics = crate::lyrics::structure_lyrics(song.structure(), |id| {
+            let rel = parent_dir.join("lyrics").join(format!("{id}.tex"));
+            let full = if self.srcdir.as_os_str().is_empty() {
+                sandbox.join(&rel)
+            } else {
+                self.srcdir.join(&rel)
+            };
+            std::fs::read_to_string(full).ok()
+        });
+        if let Some(items) = song_data.get_mut("structure").and_then(|v| v.as_array_mut()) {
+            for item in items.iter_mut() {
+                let id = item.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                match lyrics.iter().find(|l| l.id == id).and_then(|l| l.lyrics.as_ref()) {
+                    Some(Ok(per_bar)) => item["lyrics"] = serde_json::json!(per_bar),
+                    Some(Err(m)) => log::warn!(
+                        "{}: lyrics of section '{id}' not placed on the bars: {} bars but {} \\songwordfb",
+                        self.path.display(),
+                        m.bars,
+                        m.tags
+                    ),
+                    None => {}
+                }
+            }
+        }
 
         // Extract unique section types for sections.tex
         let mut section_types: HashSet<String> = HashSet::new();

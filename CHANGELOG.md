@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `pdfcellpositions`: each bar has a `lyric` field (the `\songwordfb` syllable of its first beat, `[pickup] syllable`) and a `syllables:` list gives the position of each syllable on the lyrics page. The k-th `\songwordfb` of a section is its k-th bar.
+- `world.yml`: a song has `warnings:` when the lyrics of a section have `\songwordfb` tags that do not match its number of bars.
+
+### Added
 - `pdfcellpositions`: each bar has a `chords` field (space separated, e.g. `G A`, `Fxm7`, `B/Dx`; `x` sharp, `b` flat, `r` rest), also for the passes of a repeat and for Ref sections, so the apk can play them.
 
 ## [0.0.47]
