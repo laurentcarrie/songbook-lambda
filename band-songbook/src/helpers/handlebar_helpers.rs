@@ -429,7 +429,7 @@ pub fn repeat_marks_helper(
     }
     let mid = (nrows - 1) as f64 / 2.0;
     out.write(&format!(
-        "    % repeat marker: one solid dot per play, recorded with the bars of its pass (see \\recorddot in preamble.tex)\n    \\foreach \\rep in {{1,...,{}}} {{\n      \\fill[black] ({{{right} + {dots_offset} + 0.3}}, {{\\currentline - 0.5*\\yr + {mid}*\\yr + 0.3*(\\rep - {})}}) circle (0.1);\n      \\coordinate (REPDOT) at ({{{right} + {dots_offset} + 0.3}}, {{\\currentline - 0.5*\\yr + {mid}*\\yr + 0.3*(\\rep - {})}});\n      \\pgfmathtruncatemacro{{\\dotfirst}}{{\\barcount + (\\rep - 1)*{block_bars} - {before_last}}}\n      \\pgfmathtruncatemacro{{\\dotlast}}{{\\dotfirst + {block_bars} - 1}}\n      \\recorddot{{\\dotfirst}}{{\\dotlast}}\n    }}\n",
+        "    % repeat marker: one solid dot per play, recorded with the bars of its pass (see \\recorddot in preamble.tex)\n    \\foreach \\rep in {{1,...,{}}} {{\n      \\fill[black] ({{{right} + {dots_offset} + 0.3}}, {{\\currentline - 0.5*\\yr + {mid}*\\yr + 0.3*(\\rep - {})}}) circle (0.1);\n      \\coordinate (REPDOT) at ({{{right} + {dots_offset} + 0.3}}, {{\\currentline - 0.5*\\yr + {mid}*\\yr - 0.3*(\\rep - {})}});\n      \\pgfmathtruncatemacro{{\\dotfirst}}{{\\barcount + (\\rep - 1)*{block_bars} - {before_last}}}\n      \\pgfmathtruncatemacro{{\\dotlast}}{{\\dotfirst + {block_bars} - 1}}\n      \\recorddot{{\\dotfirst}}{{\\dotlast}}\n    }}\n",
         block.n,
         (block.n as f64 + 1.0) / 2.0,
         (block.n as f64 + 1.0) / 2.0
