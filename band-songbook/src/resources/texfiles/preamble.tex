@@ -293,7 +293,7 @@
 % songworkd first beat
 % In the lyrics of a song that writes cells.yml, the k-th \songwordfb of a section is its k-th
 % bar: \songsylstart{first bar of the section} (before the lyrics of a section whose
-% \songwordfb match its bars) and \songsylstop. The position of each non-empty one goes to
+% \songwordfb match its bars) and \songsylstop. The position of each one, empty or not, goes to
 % cells.yml, under syllables:.
 \newcounter{songsylbar}
 \newif\ifsongsyl
@@ -320,7 +320,7 @@
 	\stepcounter{songsylbar}%
 	\ifdefined\writesongcells
 		\ifsongsyl
-			\ifblank{#1}{\fcolorbox{black}{red!20}{#1}}{\songrecordsyl{#1}}%
+			\songrecordsyl{#1}%
 		\else
 			\fcolorbox{black}{red!20}{#1}%
 		\fi
