@@ -2,9 +2,9 @@ use crate::chords::bar_numbering::{
     barcount_map_of_structure, repeat_block, row_bar_counts, row_contributions,
 };
 use crate::chords::glyph::glyph_of_baritem;
-use crate::chords::model::{Bar, BarItem};
+use crate::chords::model::{Accidental, Alteration, Bar, BarItem, Chord};
 use crate::chords::parse::parse;
-use crate::model::StructureItem;
+use crate::model::{SectionItem, StructureItem};
 use handlebars::{
     Context, Handlebars, Helper, Output, RenderContext, RenderError, RenderErrorReason,
 };
@@ -281,6 +281,58 @@ pub fn row_multiplier_helper(
     Ok(())
 }
 
+/// A chord as plain ASCII for cells.yml: the root, `x` for a sharp or `b` for a
+/// flat, `m` for minor, the alteration (`5`, `6`, `7`, `M7`, `sus2`, `sus4`,
+/// `dim`) and `/bass`. A, Bb, Fxm7, Dsus4, B/Dx.
+fn chord_token(c: &Chord) -> String {
+    let acc = |a: &Accidental| match a {
+        Accidental::Sharp => "x",
+        Accidental::Flat => "b",
+        Accidental::None => "",
+    };
+    let alt = match c.alteration {
+        Alteration::None => "",
+        Alteration::Nofith => "5",
+        Alteration::Six => "6",
+        Alteration::Seven => "7",
+        Alteration::MajorSeven => "M7",
+        Alteration::Sus2 => "sus2",
+        Alteration::Sus4 => "sus4",
+        Alteration::Dim => "dim",
+    };
+    let mut t = format!(
+        "{}{}{}{}",
+        c.name,
+        acc(&c.accidental),
+        if c.minor { "m" } else { "" },
+        alt
+    );
+    if let Some(b) = &c.bass {
+        t.push_str(&format!("/{}{}", b.name, acc(&b.accidental)));
+    }
+    t
+}
+
+/// The chords of a bar for cells.yml, space separated, `r` for a rest.
+fn bar_chords(bar: &Bar) -> String {
+    bar.items
+        .iter()
+        .filter_map(|i| match i {
+            BarItem::Chord(c) => Some(chord_token(c)),
+            BarItem::Rest(_) => Some("r".to_string()),
+            BarItem::HalfBar => None,
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// The chords of each bar of a row, `""` for each bar when the row does not parse.
+fn row_chords(row: &str) -> Vec<String> {
+    parse(row)
+        .map(|p| p.bars.iter().map(bar_chords).collect())
+        .unwrap_or_default()
+}
+
 /// Writes a TikZ coordinate `BAR_<n>` for each of `count` consecutive bars.
 /// `n` is the running `\barcount` plus the bar's offset, so the names match
 /// the bar numbers printed on the chart. `center(k)` is the TikZ point of the
@@ -291,14 +343,16 @@ fn write_bar_coordinates(
     count: usize,
     center: impl Fn(usize) -> String,
     size: (&str, &str),
+    chords: &[String],
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     for k in 0..count {
         out.write(&format!(
-            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\\recordbar{{\\barnum}}{{{}}}{{{}}}\n",
+            "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {k}}}\\coordinate (BAR_\\barnum) at ({});\\recordbar{{\\barnum}}{{{}}}{{{}}}{{{}}}\n",
             center(k),
             size.0,
-            size.1
+            size.1,
+            chords.get(k).map(String::as_str).unwrap_or("")
         ))?;
     }
     Ok(())
@@ -332,6 +386,7 @@ pub fn bar_coordinates_helper(
             )
         },
         ("\\xr", "\\yr"),
+        &row_chords(input),
         out,
     )
 }
@@ -410,8 +465,9 @@ pub fn repeat_marks_helper(
             for m in 0..bars[row] {
                 let offset = pass * block_bars + before + m - before_last;
                 out.write(&format!(
-                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\\recordbar{{\\barnum}}{{\\xr}}{{\\yr}}\n",
-                    nrows - 1 - i
+                    "    \\pgfmathtruncatemacro{{\\barnum}}{{\\barcount + {offset}}}\\coordinate (BAR_\\barnum) at (\\columnleft + {m}*\\xr + 0.5*\\xr, \\currentline - 0.5*\\yr + {}*\\yr);\\recordbar{{\\barnum}}{{\\xr}}{{\\yr}}{{{}}}\n",
+                    nrows - 1 - i,
+                    row_chords(&rows[row]).get(m).map(String::as_str).unwrap_or("")
                 ))?;
             }
             before += bars[row];
@@ -452,6 +508,7 @@ pub fn ref_bar_coordinates_helper(
         count.max(0) as usize,
         |_| "\\columnleft + 2*\\xr, \\currentline - 0.25*\\yr".to_string(),
         ("2*\\xr", "\\yr/2"),
+        &ref_chords_of(h),
         out,
     )
 }
@@ -468,6 +525,44 @@ pub fn ref_bar_count_helper(
 ) -> Result<(), RenderError> {
     out.write(&ref_bar_count_of(h)?.to_string())?;
     Ok(())
+}
+
+/// The chords of every bar of rows played in order, the repeated blocks
+/// unrolled: the numbering of `row_contributions`.
+fn unrolled_chords(rows: &[String]) -> Vec<String> {
+    let per_row: Vec<Vec<String>> = rows.iter().map(|r| row_chords(r)).collect();
+    let mut out = Vec::new();
+    for i in 0..rows.len() {
+        out.extend(per_row[i].iter().cloned());
+        if let Some(block) = repeat_block(rows, i) {
+            for _ in 1..block.n {
+                for r in block.first..=block.last {
+                    out.extend(per_row[r].iter().cloned());
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Chords of the bars of the Ref section of a `link song.structure` call (the
+/// chords of the section `link` refers to); empty when there is none.
+fn ref_chords_of(h: &Helper) -> Vec<String> {
+    let (Some(link), Some(structure)) = (
+        h.param(0).and_then(|v| v.value().as_str()),
+        h.param(1)
+            .and_then(|v| serde_json::from_value::<Vec<StructureItem>>(v.value().clone()).ok()),
+    ) else {
+        return Vec::new();
+    };
+    // `link` is already the id of the referred section
+    structure
+        .iter()
+        .find_map(|item| match &item.item {
+            SectionItem::Chords(c) if item.id == link => Some(unrolled_chords(&c.rows)),
+            _ => None,
+        })
+        .unwrap_or_default()
 }
 
 /// Bar count of the section linked by a `link song.structure` helper call.
