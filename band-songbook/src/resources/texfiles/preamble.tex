@@ -127,6 +127,16 @@
       {#1}{\the\pgf@xa}{\the\pgf@ya}{\the\pgf@xb}{\the\pgf@yb}%
       {\detokenize\expandafter{\cursection}}}%
   \fi}
+% \recorddot{first}{last}: the dot of a repeat marker drawn at the coordinate REPDOT, for the
+% passes of the repeated block whose bars are first..last.
+\gdef\songdotrecords{}
+\newcommand*{\recorddot}[2]{%
+  \ifdefined\writesongcells
+    \pgfpointanchor{REPDOT}{center}%
+    \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \xdef\songdotrecords{\unexpanded\expandafter{\songdotrecords}\noexpand\songdotrecord%
+      {#1}{#2}{\the\pgf@xa}{\the\pgf@ya}}%
+  \fi}
 % Bounding box of the picture, read just before TikZ closes it.
 \newcommand*{\songendpicture}{%
   \xdef\songminx{\the\pgf@picminx}\xdef\songminy{\the\pgf@picminy}}
@@ -147,6 +157,19 @@
     \space\space h: \strip@pt\dimexpr\songdh*7200/7227\relax^^J%
     \space\space section: "#6"}}%
   \songwrite}
+% \songdotrecord{first}{last}{x}{y}: x y is the center of the dot in the picture. Written like the cells.
+\newcommand*{\songdotrecord}[4]{%
+  \pgfmathsetlength\songdx{\songscale*(#3-\songminx)}%
+  \pgfmathsetlength\songdy{\songscale*(#4-\songminy)}%
+  \pgfmathsetlength\songdw{\songscale*0.1cm}%
+  \edef\songwrite{\noexpand\write\songcellsfile{%
+    - first: #1^^J%
+    \space\space last: #2^^J%
+    \space\space page: \noexpand\thepage^^J%
+    \space\space x: \noexpand\strip@pt\noexpand\dimexpr(\noexpand\lastxpos sp+\the\songdx)*7200/7227\noexpand\relax^^J%
+    \space\space y: \noexpand\strip@pt\noexpand\dimexpr(\the\paperheight-\noexpand\lastypos sp-\the\songdy)*7200/7227\noexpand\relax^^J%
+    \space\space r: \strip@pt\dimexpr\songdw*7200/7227\relax}}%
+  \songwrite}
 \newcommand*{\songplacechart}{%
   \ifdefined\writesongcells
     \pgfmathsetmacro{\songscale}{min(1,\the\textwidth/\the\wd\songchartbox)}%
@@ -156,7 +179,10 @@
     \noindent\savepos
     \scalebox{\songscale}{\usebox{\songchartbox}}%
     \songcellrecords
+    \write\songcellsfile{dots:}%
+    \songdotrecords
     \gdef\songcellrecords{}%
+    \gdef\songdotrecords{}%
   \else
     \pgfmathsetmacro{\songscale}{min(1,\the\textwidth/\the\wd\songchartbox)}%
     \noindent\scalebox{\songscale}{\usebox{\songchartbox}}%

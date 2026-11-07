@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.47]
+
+### Added
+- `pdfcellpositions`: a `dots:` list gives the position of each dot of a repeat marker (`first`/`last` bars of the pass it stands for, `page`, `x`, `y`, `r` in PDF points), so the apk can mark the pass being played.
+
 ## [0.0.46]
 
 ### Added
