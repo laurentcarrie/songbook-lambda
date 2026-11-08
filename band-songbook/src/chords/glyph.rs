@@ -38,3 +38,36 @@ pub fn glyph_of_baritem(item: &BarItem) -> String {
         BarItem::HalfBar => "HALFBAR".to_string(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::chords::parse::parse;
+
+    fn glyphs(row: &str) -> Vec<String> {
+        parse(row)
+            .unwrap()
+            .bars
+            .iter()
+            .map(|b| glyph_of_baritem(&b.items[0]))
+            .collect()
+    }
+
+    #[test]
+    fn power_and_sixth_chords_have_a_macro_each() {
+        assert_eq!(
+            glyphs("C5|Fs5|Bb5|C6|Bf6|Fs6|Am6|Bfm6|Gsm6"),
+            [
+                "\\chordCnofith",
+                "\\chordFsnofith",
+                "\\chordBfnofith",
+                "\\chordCsix",
+                "\\chordBfsix",
+                "\\chordFssix",
+                "\\chordAmsix",
+                "\\chordBfmsix",
+                "\\chordGsmsix"
+            ]
+        );
+    }
+}

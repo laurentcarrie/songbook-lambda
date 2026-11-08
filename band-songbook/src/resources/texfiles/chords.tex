@@ -30,6 +30,21 @@
 {songbook_sus}
 
 
+\newfontfamily\songbookfontsix[%%basic weight: 50, "bold" weight: 70
+	Extension      = .ttf,
+	ItalicFont     = songbook_six,
+	BoldFont       = songbook_six,
+	BoldItalicFont = songbook_six]
+{songbook_six}
+
+\newfontfamily\songbookfontfive[%%basic weight: 50, "bold" weight: 70
+	Extension      = .ttf,
+	ItalicFont     = songbook_five,
+	BoldFont       = songbook_five,
+	BoldItalicFont = songbook_five]
+{songbook_five}
+
+
 \newcommand\chordA{{\songbookfont\fontsize{18pt}{18pt}\selectfont A ~ }}
 \newcommand\chordB{{\songbookfont\fontsize{18pt}{18pt}\selectfont B ~ }}
 \newcommand\chordC{{\songbookfont\fontsize{18pt}{18pt}\selectfont C ~ }}
@@ -94,13 +109,13 @@
 \newcommand\chordFfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont T ~ }}
 \newcommand\chordGfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont U ~ }}
 
-\newcommand\chordAmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont V ~ }}
-\newcommand\chordBmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont W ~ }}
-\newcommand\chordCmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont X ~ }}
-\newcommand\chordDmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont Y ~ }}
-\newcommand\chordEmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont Z ~ }}
-\newcommand\chordFmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont [ ~ }}
-\newcommand\chordGmfsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont \ ~ }}
+\newcommand\chordAfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont V ~ }}
+\newcommand\chordBfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont W ~ }}
+\newcommand\chordCfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont X ~ }}
+\newcommand\chordDfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont Y ~ }}
+\newcommand\chordEfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont Z ~ }}
+\newcommand\chordFfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont [ ~ }}
+\newcommand\chordGfmsept{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont \ ~ }}
 
 \newcommand\chordAfseptM{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont c ~ }}
 \newcommand\chordBfseptM{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont d ~ }}
@@ -166,13 +181,20 @@
 \newcommand\chordFfdim{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont o ~ }}
 \newcommand\chordGfdim{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont p ~ }}
 
-\newcommand\chordAsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont A ~ }}
-\newcommand\chordBsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont B ~ }}
-\newcommand\chordCsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont C ~ }}
-\newcommand\chordDsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont D ~ }}
-\newcommand\chordEsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont E ~ }}
-\newcommand\chordFsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont F ~ }}
-\newcommand\chordGsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont G ~ }}
+
+
+
+
+
+% sus chords, all in songbook_sus.ttf (see fonts/make_sus_glyphs.py): sus4 A..G, sus2 H..N,
+% flat sus4 O..U, flat sus2 V..\ , sharp sus4 c..i, sharp sus2 j..p
+\newcommand\chordAsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont H ~ }}
+\newcommand\chordBsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont I ~ }}
+\newcommand\chordCsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont J ~ }}
+\newcommand\chordDsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont K ~ }}
+\newcommand\chordEsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont L ~ }}
+\newcommand\chordFsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont M ~ }}
+\newcommand\chordGsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont N ~ }}
 
 \newcommand\chordAsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont A ~ }}
 \newcommand\chordBsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont B ~ }}
@@ -182,23 +204,117 @@
 \newcommand\chordFsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont F ~ }}
 \newcommand\chordGsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont G ~ }}
 
-\newcommand\chordAfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont q ~ }}
-\newcommand\chordBfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont r ~ }}
-\newcommand\chordCfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont s ~ }}
-\newcommand\chordDfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont t ~ }}
-\newcommand\chordEfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont u ~ }}
-\newcommand\chordFfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont v ~ }}
-\newcommand\chordGfsus{{\songbookfontflat\fontsize{18pt}{18pt}\selectfont w ~ }}
+\newcommand\chordAfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont V ~ }}
+\newcommand\chordBfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont W ~ }}
+\newcommand\chordCfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont X ~ }}
+\newcommand\chordDfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont Y ~ }}
+\newcommand\chordEfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont Z ~ }}
+\newcommand\chordFfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont [ ~ }}
+\newcommand\chordGfsustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont \char92  ~ }}
 
+\newcommand\chordAfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont O ~ }}
+\newcommand\chordBfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont P ~ }}
+\newcommand\chordCfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont Q ~ }}
+\newcommand\chordDfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont R ~ }}
+\newcommand\chordEfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont S ~ }}
+\newcommand\chordFfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont T ~ }}
+\newcommand\chordGfsusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont U ~ }}
 
+\newcommand\chordAssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont j ~ }}
+\newcommand\chordBssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont k ~ }}
+\newcommand\chordCssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont l ~ }}
+\newcommand\chordDssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont m ~ }}
+\newcommand\chordEssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont n ~ }}
+\newcommand\chordFssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont o ~ }}
+\newcommand\chordGssustwo{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont p ~ }}
+
+\newcommand\chordAssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont c ~ }}
+\newcommand\chordBssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont d ~ }}
+\newcommand\chordCssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont e ~ }}
+\newcommand\chordDssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont f ~ }}
+\newcommand\chordEssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont g ~ }}
+\newcommand\chordFssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont h ~ }}
+\newcommand\chordGssusfour{{\songbookfontsus\fontsize{18pt}{18pt}\selectfont i ~ }}
+
+% sixth chords (C6) and minor sixth chords (Cm6), all in songbook_six.ttf (see fonts/make_six_glyphs.py):
+% 6 A..G, flat 6 H..N, sharp 6 O..U, m6 V..\ , flat m6 c..i, sharp m6 j..p
+\newcommand\chordAsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont A ~ }}
+\newcommand\chordBsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont B ~ }}
+\newcommand\chordCsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont C ~ }}
+\newcommand\chordDsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont D ~ }}
+\newcommand\chordEsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont E ~ }}
+\newcommand\chordFsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont F ~ }}
+\newcommand\chordGsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont G ~ }}
+
+\newcommand\chordAfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont H ~ }}
+\newcommand\chordBfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont I ~ }}
+\newcommand\chordCfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont J ~ }}
+\newcommand\chordDfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont K ~ }}
+\newcommand\chordEfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont L ~ }}
+\newcommand\chordFfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont M ~ }}
+\newcommand\chordGfsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont N ~ }}
+
+\newcommand\chordAssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont O ~ }}
+\newcommand\chordBssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont P ~ }}
+\newcommand\chordCssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont Q ~ }}
+\newcommand\chordDssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont R ~ }}
+\newcommand\chordEssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont S ~ }}
+\newcommand\chordFssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont T ~ }}
+\newcommand\chordGssix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont U ~ }}
+
+\newcommand\chordAmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont V ~ }}
+\newcommand\chordBmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont W ~ }}
+\newcommand\chordCmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont X ~ }}
+\newcommand\chordDmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont Y ~ }}
+\newcommand\chordEmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont Z ~ }}
+\newcommand\chordFmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont [ ~ }}
+\newcommand\chordGmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont \ ~ }}
+
+\newcommand\chordAfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont c ~ }}
+\newcommand\chordBfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont d ~ }}
+\newcommand\chordCfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont e ~ }}
+\newcommand\chordDfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont f ~ }}
+\newcommand\chordEfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont g ~ }}
+\newcommand\chordFfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont h ~ }}
+\newcommand\chordGfmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont i ~ }}
+
+\newcommand\chordAsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont j ~ }}
+\newcommand\chordBsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont k ~ }}
+\newcommand\chordCsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont l ~ }}
+\newcommand\chordDsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont m ~ }}
+\newcommand\chordEsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont n ~ }}
+\newcommand\chordFsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont o ~ }}
+\newcommand\chordGsmsix{{\songbookfontsix\fontsize{18pt}{18pt}\selectfont p ~ }}
+
+% power chords (C5), all in songbook_five.ttf (see fonts/make_five_glyphs.py): natural A..G, flat H..N, sharp O..U
+\newcommand\chordAnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont A ~ }}
+\newcommand\chordBnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont B ~ }}
+\newcommand\chordCnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont C ~ }}
+\newcommand\chordDnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont D ~ }}
+\newcommand\chordEnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont E ~ }}
+\newcommand\chordFnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont F ~ }}
+\newcommand\chordGnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont G ~ }}
+
+\newcommand\chordAfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont H ~ }}
+\newcommand\chordBfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont I ~ }}
+\newcommand\chordCfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont J ~ }}
+\newcommand\chordDfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont K ~ }}
+\newcommand\chordEfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont L ~ }}
+\newcommand\chordFfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont M ~ }}
+\newcommand\chordGfnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont N ~ }}
+
+\newcommand\chordAsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont O ~ }}
+\newcommand\chordBsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont P ~ }}
+\newcommand\chordCsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont Q ~ }}
+\newcommand\chordDsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont R ~ }}
+\newcommand\chordEsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont S ~ }}
+\newcommand\chordFsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont T ~ }}
+\newcommand\chordGsnofith{{\songbookfontfive\fontsize{18pt}{18pt}\selectfont U ~ }}
 
 \newcommand\chordERest{{\songbookfontsharp\fontsize{18pt}{18pt}\selectfont q ~ }}
 \newcommand\chordQRest{{\songbookfontsharp\fontsize{18pt}{18pt}\selectfont r ~ }}
 \newcommand\chordHRest{{\songbookfontsharp\fontsize{18pt}{18pt}\selectfont – ~ }}
 \newcommand\chordQHRest{{\songbookfontsharp\fontsize{18pt}{18pt}\selectfont t ~ }}
-\newcommand\chordRepeatDeux{{\songbookfont\fontsize{18pt}{24pt}\selectfont 2 ~ }}
-\newcommand\chordRepeatTrois{{\songbookfont\fontsize{18pt}{24pt}\selectfont 3 ~ }}
-\newcommand\chordRepeatfour{{\songbookfont\fontsize{18pt}{24pt}\selectfont 4 ~ }}
 
 
 
