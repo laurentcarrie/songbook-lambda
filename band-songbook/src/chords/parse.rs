@@ -17,7 +17,7 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 /// Parses a chord string into a BarItem
-/// Valid formats: [A-G][m]?[7M?]? (e.g., C, Am, G7, Em7, C7M)
+/// Valid formats: [A-G][m]?[5|6|7[M]|dim|sus2|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
 fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     let s = s.trim();
 
@@ -84,8 +84,11 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
         false
     };
 
-    // Check for alteration: '6', '7' optionally followed by 'M', 'dim', 'sus2', 'sus4'
-    let alteration = if chars.peek() == Some(&'6') {
+    // Check for alteration: '5' (power chord), '6', '7' optionally followed by 'M', 'dim', 'sus2', 'sus4'
+    let alteration = if chars.peek() == Some(&'5') {
+        chars.next();
+        Alteration::Nofith
+    } else if chars.peek() == Some(&'6') {
         chars.next();
         Alteration::Six
     } else if chars.peek() == Some(&'7') {
@@ -107,6 +110,11 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     } else {
         Alteration::None
     };
+
+    // A power chord has no third: C5 is understood, Cm5 is not
+    if minor && alteration == Alteration::Nofith {
+        return Err(ParseError::InvalidChord(s.to_string()));
+    }
 
     // If there are remaining characters, it's invalid
     if chars.next().is_some() {
@@ -269,6 +277,54 @@ mod tests {
             panic!("Expected Chord");
         }
         assert!(parse("B/H").is_err());
+    }
+
+    #[test]
+    fn test_parse_power_chord() {
+        let result = parse("C5|Fs5|Bb5|Gf5|D#5|Am|x2").unwrap();
+        let chord = |i: usize| match &result.bars[i].items[0] {
+            BarItem::Chord(c) => c.clone(),
+            _ => panic!("Expected Chord"),
+        };
+        let c = chord(0);
+        assert_eq!(c.name, "C");
+        assert_eq!(c.accidental, Accidental::None);
+        assert_eq!(c.alteration, Alteration::Nofith);
+        assert_eq!(chord(1).accidental, Accidental::Sharp);
+        assert_eq!(chord(1).alteration, Alteration::Nofith);
+        assert_eq!(chord(2).accidental, Accidental::Flat);
+        assert_eq!(chord(3).accidental, Accidental::Flat);
+        assert_eq!(chord(4).accidental, Accidental::Sharp);
+        assert_eq!(chord(5).alteration, Alteration::None);
+        assert_eq!(result.repeat.n, 2);
+        // slash chords too
+        assert!(parse("C5/G").is_ok());
+        // a power chord has no third: no minor 5, and 5 must come last
+        assert!(parse("Cm5").is_err());
+        assert!(parse("C57").is_err());
+        assert!(parse("C5x").is_err());
+    }
+
+    #[test]
+    fn test_parse_sixth_chord() {
+        let result = parse("C6|Fs6|Bb6|Am6|Gsm6|Bfm6|Cm6/Bb|x2").unwrap();
+        let chord = |i: usize| match &result.bars[i].items[0] {
+            BarItem::Chord(c) => c.clone(),
+            _ => panic!("Expected Chord"),
+        };
+        for i in 0..7 {
+            assert_eq!(chord(i).alteration, Alteration::Six, "bar {i}");
+        }
+        assert!(!chord(0).minor);
+        assert_eq!(chord(1).accidental, Accidental::Sharp);
+        assert_eq!(chord(2).accidental, Accidental::Flat);
+        assert!(chord(3).minor);
+        assert!(chord(4).minor && chord(4).accidental == Accidental::Sharp);
+        assert!(chord(5).minor && chord(5).accidental == Accidental::Flat);
+        assert!(chord(6).minor && chord(6).bass.is_some());
+        assert_eq!(result.repeat.n, 2);
+        assert!(parse("C66").is_err());
+        assert!(parse("C6x").is_err());
     }
 
     #[test]
