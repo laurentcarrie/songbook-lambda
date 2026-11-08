@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.48]
+
 ### Added
 - Power chords (`C5`, `F#5`, `Bb5`) and sixth chords (`C6`, `Cm6`, `Gsm6`), natural, flat and sharp: the parser understands them and new fonts `songbook_five.ttf` and `songbook_six.ttf` draw them (macros `\chordCnofith`, `\chordCsix`, `\chordCmsix`, ...). A minor power chord (`Cm5`) is rejected.
 - sus2 and sus4 have their own glyphs, in `songbook_sus.ttf`, for natural, flat and sharp chords (sus2 used to be drawn as sus4). "sus" is stacked over the number.
 - Glyphs added to the sharp font (7, m7, maj7 chords, eighth rest and dotted half rest) and to the flat font (maj7 and dim chords). `fonts/make_*_glyphs.py` rebuild the generated ones.
+- `pdfcellpositions`: each bar has a `lyric` field (the `\songwordfb` syllable of its first beat, `[pickup] syllable`) and a `syllables:` list gives the position of each syllable on the lyrics page. The k-th `\songwordfb` of a section is its k-th bar.
+- `world.yml`: a song has `warnings:` when the lyrics of a section have `\songwordfb` tags that do not match its number of bars.
+- `pdfcellpositions`: each bar has a `chords` field (space separated, e.g. `G A`, `Fxm7`, `B/Dx`; `x` sharp, `b` flat, `r` rest), also for the passes of a repeat and for Ref sections, so the apk can play them.
 
 ### Changed
 - The `x2`, `x3` and `x4` repeat glyphs and macros are removed: repeats are drawn as dots by the TikZ code.
@@ -19,13 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flat minor-seventh macros were named `\chordAmfsept` while the code builds `\chordAfmsept`; renamed.
 - Flat `F` and `G` minor-seventh glyphs had no flat sign.
 - Several flat and sharp chord glyphs were missing, empty or broken (A flat maj7 was only a triangle).
-
-### Added
-- `pdfcellpositions`: each bar has a `lyric` field (the `\songwordfb` syllable of its first beat, `[pickup] syllable`) and a `syllables:` list gives the position of each syllable on the lyrics page. The k-th `\songwordfb` of a section is its k-th bar.
-- `world.yml`: a song has `warnings:` when the lyrics of a section have `\songwordfb` tags that do not match its number of bars.
-
-### Added
-- `pdfcellpositions`: each bar has a `chords` field (space separated, e.g. `G A`, `Fxm7`, `B/Dx`; `x` sharp, `b` flat, `r` rest), also for the passes of a repeat and for Ref sections, so the apk can play them.
 
 ## [0.0.47]
 
