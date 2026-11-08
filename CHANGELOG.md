@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.49]
+
+### Added
+- Ninth chords (`C9`, `F#9`, `Bb9`, `Am9`, `Gsm9`), natural, flat and sharp: the parser understands them and a new font `songbook_nine.ttf` draws them (macros `\chordCnine`, `\chordCmnine`, ...; `fonts/make_nine_glyphs.py` rebuilds the font).
+
 ## [0.0.48]
 
 ### Added
