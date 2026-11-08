@@ -17,7 +17,7 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 /// Parses a chord string into a BarItem
-/// Valid formats: [A-G][m]?[5|6|7[M]|dim|sus2|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
+/// Valid formats: [A-G][m]?[5|6|7[M]|9|dim|sus2|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
 fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     let s = s.trim();
 
@@ -91,6 +91,9 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     } else if chars.peek() == Some(&'6') {
         chars.next();
         Alteration::Six
+    } else if chars.peek() == Some(&'9') {
+        chars.next();
+        Alteration::Nine
     } else if chars.peek() == Some(&'7') {
         chars.next();
         if chars.peek() == Some(&'M') {
@@ -325,6 +328,28 @@ mod tests {
         assert_eq!(result.repeat.n, 2);
         assert!(parse("C66").is_err());
         assert!(parse("C6x").is_err());
+    }
+
+    #[test]
+    fn test_parse_ninth_chord() {
+        let result = parse("C9|Fs9|Bb9|Am9|Gsm9|Bfm9|F9/A|x2").unwrap();
+        let chord = |i: usize| match &result.bars[i].items[0] {
+            BarItem::Chord(c) => c.clone(),
+            _ => panic!("Expected Chord"),
+        };
+        for i in 0..7 {
+            assert_eq!(chord(i).alteration, Alteration::Nine, "bar {i}");
+        }
+        assert!(!chord(0).minor);
+        assert_eq!(chord(1).accidental, Accidental::Sharp);
+        assert_eq!(chord(2).accidental, Accidental::Flat);
+        assert!(chord(3).minor);
+        assert!(chord(4).minor && chord(4).accidental == Accidental::Sharp);
+        assert!(chord(5).minor && chord(5).accidental == Accidental::Flat);
+        assert!(chord(6).bass.is_some());
+        assert_eq!(result.repeat.n, 2);
+        assert!(parse("C99").is_err());
+        assert!(parse("C9x").is_err());
     }
 
     #[test]

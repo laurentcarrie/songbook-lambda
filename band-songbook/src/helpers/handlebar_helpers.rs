@@ -295,6 +295,7 @@ fn chord_token(c: &Chord) -> String {
         Alteration::Nofith => "5",
         Alteration::Six => "6",
         Alteration::Seven => "7",
+        Alteration::Nine => "9",
         Alteration::MajorSeven => "M7",
         Alteration::Sus2 => "sus2",
         Alteration::Sus4 => "sus4",

@@ -16,6 +16,7 @@ pub fn glyph_of_baritem(item: &BarItem) -> String {
             match chord.alteration {
                 Alteration::Six => s.push_str("six"),
                 Alteration::Seven => s.push_str("sept"),
+                Alteration::Nine => s.push_str("nine"),
                 Alteration::MajorSeven => s.push_str("septM"),
                 Alteration::Sus2 => s.push_str("sustwo"),
                 Alteration::Sus4 => s.push_str("susfour"),
@@ -56,7 +57,7 @@ mod tests {
     #[test]
     fn power_and_sixth_chords_have_a_macro_each() {
         assert_eq!(
-            glyphs("C5|Fs5|Bb5|C6|Bf6|Fs6|Am6|Bfm6|Gsm6"),
+            glyphs("C5|Fs5|Bb5|C6|Bf6|Fs6|Am6|Bfm6|Gsm6|C9|Bf9|Fs9|Am9|Bfm9|Gsm9"),
             [
                 "\\chordCnofith",
                 "\\chordFsnofith",
@@ -66,7 +67,13 @@ mod tests {
                 "\\chordFssix",
                 "\\chordAmsix",
                 "\\chordBfmsix",
-                "\\chordGsmsix"
+                "\\chordGsmsix",
+                "\\chordCnine",
+                "\\chordBfnine",
+                "\\chordFsnine",
+                "\\chordAmnine",
+                "\\chordBfmnine",
+                "\\chordGsmnine"
             ]
         );
     }

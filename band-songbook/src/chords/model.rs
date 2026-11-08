@@ -14,6 +14,7 @@ pub enum Alteration {
     Six,
     Seven,
     MajorSeven,
+    Nine,
     Sus2,
     Sus4,
     Dim,
