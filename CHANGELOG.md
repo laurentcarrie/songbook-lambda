@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- The author (and the book titles) are drawn with the OpenType version of the frcursive font, `fonts/songbook_author.otf`, instead of the embedded Type 1 font: PDFium, the PDF renderer of Android, drew only the first letters of it ("Les Innocents" came out "Le" on the tablet).
+- The author (and the book titles) are drawn with the OpenType version of the frcursive font, `fonts/songbook_author.otf`, instead of the embedded Type 1 font: PDFium, the PDF renderer of Android, drew only the first letters of it ("Les Innocents" came out "Le" on the tablet). The letters that start with an entry stroke (m, n, p, s, v, w, y, ...) had a gap of 120 to 230 units in front of them (the TeX font corrected it with kerning): their left bearing is tightened.
 
 ## [0.0.49]
 
