@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The author (and the book titles) are drawn with the OpenType version of the frcursive font, `fonts/songbook_author.otf`, instead of the embedded Type 1 font: PDFium, the PDF renderer of Android, drew only the first letters of it ("Les Innocents" came out "Le" on the tablet).
+
 ## [0.0.49]
 
 ### Added
