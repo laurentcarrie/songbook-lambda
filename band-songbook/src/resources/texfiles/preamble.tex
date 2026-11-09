@@ -84,6 +84,11 @@
 \usepackage{fontspec}
 \setmainfont{Garamond Libre}
 
+% The author is drawn with the OpenType version of the frcursive font (fonts/songbook_author.otf): the Type 1
+% font embedded by \textcursive is drawn incompletely by PDFium, the PDF renderer of Android ("Les Innocents" came out "Le").
+\newfontfamily\songbookauthorfont[Extension=.otf, BoldFont=songbook_author, ItalicFont=songbook_author, BoldItalicFont=songbook_author]{songbook_author}
+\renewcommand{\textcursive}[1]{ {\songbookauthorfont #1} }
+
 % pour les lignes pointillées dans les tableaux
 % \usepackage{arydshln}
 
@@ -228,7 +233,7 @@
 		#2
 	}
 	{
-		\cursive\bfseries
+		\songbookauthorfont
 		\fontsize{10pt}{10pt}\selectfont
 		\color{orange}
 		#1

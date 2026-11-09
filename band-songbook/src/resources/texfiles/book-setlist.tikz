@@ -55,7 +55,7 @@
         \node[anchor=center] (b) at (Aauthor) {
             \hyperref[book:song:{{add-helper @index ../offset}}]{%
                 %\Fontskrivan\bfseries\slshape%
-                \cursive\bfseries%
+                \songbookauthorfont%
                 \fontsize{15pt}{10pt}\selectfont%
                 \color{orange}%
                 ( {{{this.author}}} ) %
