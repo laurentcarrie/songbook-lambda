@@ -17,7 +17,7 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 /// Parses a chord string into a BarItem
-/// Valid formats: [A-G][m]?[5|6|7[M]|9|dim|sus2|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
+/// Valid formats: [A-G][m]?[5|6|7[M|sus4]|9|dim|sus2|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
 fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     let s = s.trim();
 
@@ -84,7 +84,7 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
         false
     };
 
-    // Check for alteration: '5' (power chord), '6', '7' optionally followed by 'M', 'dim', 'sus2', 'sus4'
+    // Check for alteration: '5' (power chord), '6', '7' optionally followed by 'M' or 'sus4', 'dim', 'sus2', 'sus4'
     let alteration = if chars.peek() == Some(&'5') {
         chars.next();
         Alteration::Nofith
@@ -99,6 +99,13 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
         if chars.peek() == Some(&'M') {
             chars.next();
             Alteration::MajorSeven
+        } else if chars.peek() == Some(&'s') {
+            // G7sus4: the only thing that can follow the 7 starting with an s
+            let suffix: String = chars.by_ref().collect();
+            if suffix != "sus4" {
+                return Err(ParseError::InvalidChord(s.to_string()));
+            }
+            Alteration::SevenSus4
         } else {
             Alteration::Seven
         }
@@ -116,6 +123,11 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
 
     // A power chord has no third: C5 is understood, Cm5 is not
     if minor && alteration == Alteration::Nofith {
+        return Err(ParseError::InvalidChord(s.to_string()));
+    }
+
+    // There is no glyph for a minor 7sus4 (Gm7sus4): it is refused, not drawn wrong
+    if minor && alteration == Alteration::SevenSus4 {
         return Err(ParseError::InvalidChord(s.to_string()));
     }
 
@@ -201,6 +213,65 @@ pub fn parse(input: &str) -> Result<ParsedRow, ParseError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_seventh_sus4() {
+        let result = parse("G7sus4|Bf7sus4|Fs7sus4/C|G7sus4 C|G7|Gsus4").unwrap();
+        let alterations: Vec<(String, Accidental, Alteration, bool)> = result
+            .bars
+            .iter()
+            .flat_map(|b| b.items.iter())
+            .filter_map(|i| match i {
+                BarItem::Chord(c) => Some((
+                    c.name.clone(),
+                    c.accidental.clone(),
+                    c.alteration.clone(),
+                    c.bass.is_some(),
+                )),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            alterations,
+            [
+                (
+                    "G".to_string(),
+                    Accidental::None,
+                    Alteration::SevenSus4,
+                    false
+                ),
+                (
+                    "B".to_string(),
+                    Accidental::Flat,
+                    Alteration::SevenSus4,
+                    false
+                ),
+                (
+                    "F".to_string(),
+                    Accidental::Sharp,
+                    Alteration::SevenSus4,
+                    true
+                ),
+                (
+                    "G".to_string(),
+                    Accidental::None,
+                    Alteration::SevenSus4,
+                    false
+                ),
+                ("C".to_string(), Accidental::None, Alteration::None, false),
+                ("G".to_string(), Accidental::None, Alteration::Seven, false),
+                ("G".to_string(), Accidental::None, Alteration::Sus4, false),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_parse_seventh_sus4_invalid() {
+        // no glyph for a minor 7sus4, and nothing but sus4 may follow the 7
+        for bad in ["Gm7sus4", "G7sus2", "G7sus", "G7sus44", "G7s"] {
+            assert!(parse(bad).is_err(), "{bad} should be refused");
+        }
+    }
 
     #[test]
     fn test_parse_basic() {

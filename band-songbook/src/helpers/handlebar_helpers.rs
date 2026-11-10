@@ -282,7 +282,7 @@ pub fn row_multiplier_helper(
 }
 
 /// A chord as plain ASCII for cells.yml: the root, `x` for a sharp or `b` for a
-/// flat, `m` for minor, the alteration (`5`, `6`, `7`, `M7`, `sus2`, `sus4`,
+/// flat, `m` for minor, the alteration (`5`, `6`, `7`, `7sus4`, `M7`, `sus2`, `sus4`,
 /// `dim`) and `/bass`. A, Bb, Fxm7, Dsus4, B/Dx.
 fn chord_token(c: &Chord) -> String {
     let acc = |a: &Accidental| match a {
@@ -295,6 +295,7 @@ fn chord_token(c: &Chord) -> String {
         Alteration::Nofith => "5",
         Alteration::Six => "6",
         Alteration::Seven => "7",
+        Alteration::SevenSus4 => "7sus4",
         Alteration::Nine => "9",
         Alteration::MajorSeven => "M7",
         Alteration::Sus2 => "sus2",

@@ -16,6 +16,7 @@ pub fn glyph_of_baritem(item: &BarItem) -> String {
             match chord.alteration {
                 Alteration::Six => s.push_str("six"),
                 Alteration::Seven => s.push_str("sept"),
+                Alteration::SevenSus4 => s.push_str("septsusfour"),
                 Alteration::Nine => s.push_str("nine"),
                 Alteration::MajorSeven => s.push_str("septM"),
                 Alteration::Sus2 => s.push_str("sustwo"),
@@ -74,6 +75,20 @@ mod tests {
                 "\\chordAmnine",
                 "\\chordBfmnine",
                 "\\chordGsmnine"
+            ]
+        );
+    }
+
+    #[test]
+    fn seventh_sus4_chords_have_a_macro_each() {
+        assert_eq!(
+            glyphs("G7sus4|Bf7sus4|Fs7sus4|G7|Gsus4"),
+            [
+                "\\chordGseptsusfour",
+                "\\chordBfseptsusfour",
+                "\\chordFsseptsusfour",
+                "\\chordGsept",
+                "\\chordGsusfour"
             ]
         );
     }

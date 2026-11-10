@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 7sus4 chords (`G7sus4`, `Bf7sus4`, `Fs7sus4/C`), natural, flat and sharp. A minor 7sus4 (`Gm7sus4`) is refused, there is no glyph for it. New font `songbook_sevensus.ttf`, built by `fonts/make_sevensus_glyphs.py`, and the macros `\chordG..septsusfour` in `chords.tex`. Like the other songbook fonts, install it in `~/.fonts` (the Dockerfile copies `fonts/` for the lambda)
+
 ### Fixed
 - The author (and the book titles) are drawn with the OpenType version of the frcursive font, `fonts/songbook_author.otf`, instead of the embedded Type 1 font: PDFium, the PDF renderer of Android, drew only the first letters of it ("Les Innocents" came out "Le" on the tablet). The letters that start with an entry stroke (m, n, p, s, v, w, y, ...) had a gap of 120 to 230 units in front of them (the TeX font corrected it with kerning): their left bearing is tightened.
 
