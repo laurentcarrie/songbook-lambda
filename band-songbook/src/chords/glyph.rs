@@ -82,12 +82,13 @@ mod tests {
     #[test]
     fn seventh_sus4_chords_have_a_macro_each() {
         assert_eq!(
-            glyphs("G7sus4|Bf7sus4|Fs7sus4|G7|Gsus4"),
+            glyphs("G7sus4|Bf7sus|Fs7sus4|G7|Gsus4|Gsus"),
             [
                 "\\chordGseptsusfour",
                 "\\chordBfseptsusfour",
                 "\\chordFsseptsusfour",
                 "\\chordGsept",
+                "\\chordGsusfour",
                 "\\chordGsusfour"
             ]
         );

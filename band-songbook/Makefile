@@ -25,22 +25,15 @@ run: ## Build songs and books from local test data
 		--delivery delivery \
 		$(drumsopt)
 
-# Every chord macro of src/resources/texfiles/chords.tex (\\chordG, \\chordGsept, \\chordBfmnine, ...) in a table,
-# the macro name under each chord. The macros are read from chords.tex itself, so a chord added there shows up
-# here with no other change. \\chordbass takes arguments: it is left out. Needs lualatex and the songbook fonts.
+# Every chord macro of src/resources/texfiles/chords.tex in tables: one table per accidental (natural, flat,
+# sharp), a row per letter A..G, a column per kind of chord (see tools/chords_sheet.py). A chord added to
+# chords.tex that the script does not know goes in an "others" table. Needs lualatex and the songbook fonts.
 chordsdir = sandbox/chords
 
-chords-pdf: ## Generate sandbox/chords/chords.pdf: all the chords drawn by chords.tex
+chords-pdf: ## Generate sandbox/chords/chords.pdf: all the chords drawn by chords.tex, a row per letter
 	mkdir -p $(chordsdir)
 	cp src/resources/texfiles/chords.tex $(chordsdir)/chords.tex
-	{ \
-	  printf '%s\n' '\documentclass{article}' '\usepackage[margin=1.5cm]{geometry}' '\usepackage{fontspec}' '\usepackage{longtable}' '\pagestyle{empty}' \
-	    '\input{chords}' '\begin{document}' \
-	    '\setlength{\tabcolsep}{8pt}\renewcommand{\arraystretch}{1.6}' '\begin{longtable}{*{6}{c}}'; \
-	  sed -n 's/^\\newcommand\\\(chord[A-Za-z0-9]*\).*/\1/p' src/resources/texfiles/chords.tex | grep -v '^chordbass$$' | \
-	    awk '{ printf "%s\\shortstack{\\%s\\\\[2pt]{\\tiny\\ttfamily\\detokenize{%s}}}%s\n", (NR % 6 == 1 ? "" : " & "), $$1, $$1, (NR % 6 == 0 ? " \\\\" : "") }'; \
-	  printf '%s\n' '\end{longtable}' '\end{document}'; \
-	} > $(chordsdir)/all-chords.tex
+	python3 tools/chords_sheet.py src/resources/texfiles/chords.tex $(chordsdir)/all-chords.tex
 	cd $(chordsdir) && { lualatex -interaction=nonstopmode -halt-on-error all-chords.tex > all-chords.log 2>&1 || { tail -30 all-chords.log; exit 1; }; }
 	mv $(chordsdir)/all-chords.pdf $(chordsdir)/chords.pdf
 	@echo $(chordsdir)/chords.pdf

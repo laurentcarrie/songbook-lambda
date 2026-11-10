@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Build songbook_sevensus.ttf: the 7sus4 chords (G7sus4), natural, flat and sharp.
+"""Build songbook_sevensus.ttf: the 7sus4 chords (G7sus4), natural, flat and sharp, drawn as G7sus.
 
 Layout (7 letters A..G per row):
   A..G  7sus4        H..N  flat 7sus4        O..U  sharp 7sus4
 The letters (with their flat or sharp sign) come from songbook.ttf, songbook_flat.ttf and songbook_sharp.ttf.
-A "7" (Comic Neue Bold, OFL licence) goes where the 7 of the 7 chords sits, and "sus4" in smaller letters
-follows it, on its baseline. The glyph is wider than the other chords: its advance covers the "sus4".
+A "7" (Comic Neue Bold, OFL licence) goes where the 7 of the 7 chords sits, and "sus" in smaller letters
+follows it, on its baseline (a bare sus is a sus4: the 4 would only clutter the chart). The glyph is wider
+than the other chords: its advance covers the "sus".
 The container is a copy of songbook_sus.ttf, reduced to these characters and renamed.
 Usage (needs fontTools; /usr/bin/python3 has it): make_sevensus_glyphs.py
 """
@@ -24,10 +25,10 @@ LETTERS = "ABCDEFG"
 ROWS = [("songbook.ttf", "A", (676, 468, 970, 872)),
         ("songbook_flat.ttf", "H", (710, 24, 1003, 429)),
         ("songbook_sharp.ttf", "O", (730, 10, 979, 354))]
-SUS_SIZE = 500     # size of "sus4", in font units per em
+SUS_SIZE = 520     # size of "sus", in font units per em
 GAP = 30           # between the 7 and "sus4"
 EMBOLDEN = [(0, 0), (-8, 0), (8, 0), (0, -8), (0, 8)]
-EMBOLDEN_SUS = [(0, 0), (-3, 0), (3, 0)]   # "sus4" is small: a lighter stroke keeps the letters open
+EMBOLDEN_SUS = [(0, 0), (-3, 0), (3, 0)]   # "sus" is small: a lighter stroke keeps the letters open
 
 
 def draw_char(pen, comic, ch, scale, x, y, bold=EMBOLDEN):
@@ -38,7 +39,7 @@ def draw_char(pen, comic, ch, scale, x, y, bold=EMBOLDEN):
 
 
 def seven_and_sus4(pen, comic, box):
-    """Draws the 7 in `box`, then "sus4" after it. Returns the x where everything ends."""
+    """Draws the 7 in `box`, then "sus" after it. Returns the x where everything ends."""
     gs = comic.getGlyphSet(); cmap = comic.getBestCmap()
     bp = BoundsPen(gs); gs[cmap[ord("7")]].draw(bp); x0, y0, x1, y1 = bp.bounds
     inner = 8
@@ -49,7 +50,7 @@ def seven_and_sus4(pen, comic, box):
     draw_char(pen, comic, "7", s, x_seven, y_seven)
     scale = SUS_SIZE / comic["head"].unitsPerEm
     x = box[2] + GAP
-    for ch in "sus4":
+    for ch in "sus":
         x += draw_char(pen, comic, ch, scale, x, box[1] + inner, EMBOLDEN_SUS)
     return x
 
