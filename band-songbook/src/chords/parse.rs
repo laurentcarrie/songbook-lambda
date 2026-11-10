@@ -17,7 +17,7 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 /// Parses a chord string into a BarItem
-/// Valid formats: [A-G][m]?[5|6|7[M|sus4]|9|dim|sus2|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
+/// Valid formats: [A-G][m]?[5|6|7[M|sus|sus4]|9|dim|sus2|sus|sus4]? (e.g., C, Am, G7, Em7, C7M, C5)
 fn parse_item(s: &str) -> Result<BarItem, ParseError> {
     let s = s.trim();
 
@@ -84,7 +84,7 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
         false
     };
 
-    // Check for alteration: '5' (power chord), '6', '7' optionally followed by 'M' or 'sus4', 'dim', 'sus2', 'sus4'
+    // Check for alteration: '5' (power chord), '6', '7' optionally followed by 'M' or 'sus4', 'dim', 'sus2', 'sus4'; a bare 'sus' is a sus4
     let alteration = if chars.peek() == Some(&'5') {
         chars.next();
         Alteration::Nofith
@@ -100,9 +100,9 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
             chars.next();
             Alteration::MajorSeven
         } else if chars.peek() == Some(&'s') {
-            // G7sus4: the only thing that can follow the 7 starting with an s
+            // G7sus4 or G7sus: the only things that can follow the 7 starting with an s
             let suffix: String = chars.by_ref().collect();
-            if suffix != "sus4" {
+            if suffix != "sus4" && suffix != "sus" {
                 return Err(ParseError::InvalidChord(s.to_string()));
             }
             Alteration::SevenSus4
@@ -114,7 +114,7 @@ fn parse_item(s: &str) -> Result<BarItem, ParseError> {
         match suffix.as_str() {
             "dim" => Alteration::Dim,
             "sus2" => Alteration::Sus2,
-            "sus4" => Alteration::Sus4,
+            "sus4" | "sus" => Alteration::Sus4,
             _ => return Err(ParseError::InvalidChord(s.to_string())),
         }
     } else {
@@ -266,9 +266,25 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_bare_sus_is_sus4() {
+        // the 4 of a sus4 is optional: G7sus is G7sus4, Gsus is Gsus4
+        let alt = |input: &str| match &parse(input).unwrap().bars[0].items[0] {
+            BarItem::Chord(c) => (c.alteration.clone(), c.accidental.clone()),
+            _ => panic!("Expected Chord"),
+        };
+        assert_eq!(alt("G7sus"), alt("G7sus4"));
+        assert_eq!(alt("Gsus"), alt("Gsus4"));
+        assert_eq!(alt("Fssus"), alt("Fssus4"));
+        assert_eq!(alt("Bfsus"), (Alteration::Sus4, Accidental::Flat));
+        assert_eq!(alt("Fs7sus/C"), (Alteration::SevenSus4, Accidental::Sharp));
+    }
+
+    #[test]
     fn test_parse_seventh_sus4_invalid() {
         // no glyph for a minor 7sus4, and nothing but sus4 may follow the 7
-        for bad in ["Gm7sus4", "G7sus2", "G7sus", "G7sus44", "G7s"] {
+        for bad in [
+            "Gm7sus4", "Gm7sus", "G7sus2", "G7sus44", "G7s", "Gsu", "Gsus5",
+        ] {
             assert!(parse(bad).is_err(), "{bad} should be refused");
         }
     }

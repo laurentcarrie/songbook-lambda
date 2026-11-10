@@ -6,8 +6,9 @@ Layout, like the other songbook fonts (7 letters A..G per row):
   O..U  flat sus4     V..\\ flat sus2        (V W X Y Z [ \\)
   c..i  sharp sus4    j..p  sharp sus2
 The letter (and its flat or sharp sign) is taken from songbook.ttf, songbook_flat.ttf and
-songbook_sharp.ttf; "sus" over the number (Comic Neue Bold, OFL licence) is added at the top right
-of a natural letter, or at the lower right when a flat or sharp sign takes the top right.
+songbook_sharp.ttf. A sus2 has "sus" over the number 2 (Comic Neue Bold, OFL licence); a sus4 has just "sus",
+a bare sus is a sus4 and the 4 only clutters the chart. Both go at the top right of a natural letter, or at the
+lower right when a flat or sharp sign takes the top right.
 Usage (needs fontTools; /usr/bin/python3 has it): make_sus_glyphs.py
 """
 from fontTools.ttLib import TTFont
@@ -24,6 +25,9 @@ ROWS = [("songbook.ttf", "A", "4"), ("songbook.ttf", "H", "2"),
 # annotation geometry in font units (1024 per em): x, baseline of "sus", size of "sus", baseline and size of the digit
 TOP_RIGHT = dict(x=620, sus_y=790, sus_size=250, num_y=520, num_size=400)
 LOWER_RIGHT = dict(x=650, sus_y=250, sus_size=215, num_y=-40, num_size=330)
+# a sus4 is written "sus" alone: bigger, and where the number was
+SUS_ONLY_TOP_RIGHT = dict(x=620, y=600, size=400)
+SUS_ONLY_LOWER_RIGHT = dict(x=650, y=60, size=340)
 EMBOLDEN = [(0, 0), (-7, 0), (7, 0), (0, -7), (0, 7)]   # the thin strokes of the text are thickened a little
 
 
@@ -49,8 +53,12 @@ def build(target_files):
             for i, letter in enumerate(LETTERS):
                 pen = TTGlyphPen(None)
                 sgs[src_cm[ord(letter)]].draw(pen)                        # the letter, with its flat or sharp sign
-                draw_text(pen, comic, "sus", geom["sus_size"], geom["x"], geom["sus_y"])
-                draw_text(pen, comic, digit, geom["num_size"], geom["x"] + 40, geom["num_y"])
+                if digit == "4":                                          # sus4: "sus" alone
+                    alone = SUS_ONLY_TOP_RIGHT if src_name == "songbook.ttf" else SUS_ONLY_LOWER_RIGHT
+                    draw_text(pen, comic, "sus", alone["size"], alone["x"], alone["y"])
+                else:                                                     # sus2: "sus" over the 2
+                    draw_text(pen, comic, "sus", geom["sus_size"], geom["x"], geom["sus_y"])
+                    draw_text(pen, comic, digit, geom["num_size"], geom["x"] + 40, geom["num_y"])
                 g = pen.glyph(); g.recalcBounds(gl)
                 target = chr(ord(first) + i)
                 name = cm[ord(target)]

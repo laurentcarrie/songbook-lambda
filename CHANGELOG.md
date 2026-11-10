@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `make chords-pdf` (in `band-songbook`): `sandbox/chords/chords.pdf`, every chord of `chords.tex`: a table per accidental (natural, flat, sharp), a row per letter A..G, a column per kind of chord. Built by `tools/chords_sheet.py`, which lists in an "others" table a chord macro it does not know
+
+### Changed
+- A sus4 is drawn "sus" without the 4, and a 7sus4 "7sus": a bare sus is a sus4, and the 4 cluttered the chart. A sus2 keeps its 2. `Gsus` and `G7sus` are now accepted in the chord rows, as `Gsus4` and `G7sus4` still are. `fonts/songbook_sus.ttf`, its mac copy and `songbook_sevensus.ttf` are rebuilt: install them again in `~/.fonts`
+
+### Added
 - 7sus4 chords (`G7sus4`, `Bf7sus4`, `Fs7sus4/C`), natural, flat and sharp. A minor 7sus4 (`Gm7sus4`) is refused, there is no glyph for it. New font `songbook_sevensus.ttf`, built by `fonts/make_sevensus_glyphs.py`, and the macros `\chordG..septsusfour` in `chords.tex`. Like the other songbook fonts, install it in `~/.fonts` (the Dockerfile copies `fonts/` for the lambda)
 
 ### Fixed
