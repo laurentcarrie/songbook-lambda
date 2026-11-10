@@ -30,6 +30,13 @@
 {songbook_sus}
 
 
+\newfontfamily\songbookfontsevensus[%%basic weight: 50, "bold" weight: 70
+	Extension      = .ttf,
+	ItalicFont     = songbook_sevensus,
+	BoldFont       = songbook_sevensus,
+	BoldItalicFont = songbook_sevensus]
+{songbook_sevensus}
+
 \newfontfamily\songbookfontnine[%%basic weight: 50, "bold" weight: 70
 	Extension      = .ttf,
 	ItalicFont     = songbook_nine,
@@ -376,4 +383,31 @@
 
 
 % Slash chord, e.g. B/D#: the bass note (#2) drawn small under the chord (#1)
+% 7sus4 chords (G7sus4), all in songbook_sevensus.ttf (see fonts/make_sevensus_glyphs.py):
+% natural A..G, flat H..N, sharp O..U
+\newcommand\chordAseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont A ~ }}
+\newcommand\chordBseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont B ~ }}
+\newcommand\chordCseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont C ~ }}
+\newcommand\chordDseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont D ~ }}
+\newcommand\chordEseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont E ~ }}
+\newcommand\chordFseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont F ~ }}
+\newcommand\chordGseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont G ~ }}
+
+\newcommand\chordAfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont H ~ }}
+\newcommand\chordBfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont I ~ }}
+\newcommand\chordCfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont J ~ }}
+\newcommand\chordDfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont K ~ }}
+\newcommand\chordEfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont L ~ }}
+\newcommand\chordFfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont M ~ }}
+\newcommand\chordGfseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont N ~ }}
+
+\newcommand\chordAsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont O ~ }}
+\newcommand\chordBsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont P ~ }}
+\newcommand\chordCsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont Q ~ }}
+\newcommand\chordDsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont R ~ }}
+\newcommand\chordEsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont S ~ }}
+\newcommand\chordFsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont T ~ }}
+\newcommand\chordGsseptsusfour{{\songbookfontsevensus\fontsize{18pt}{18pt}\selectfont U ~ }}
+
+
 \newcommand\chordbass[2]{\shortstack{#1\\[1pt]{\fontsize{9pt}{9pt}\selectfont\bfseries\hspace*{-12pt}#2}}}

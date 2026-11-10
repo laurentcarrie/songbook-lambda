@@ -13,6 +13,8 @@ pub enum Alteration {
     Nofith,
     Six,
     Seven,
+    /// A seventh chord with a suspended fourth: G7sus4
+    SevenSus4,
     MajorSeven,
     Nine,
     Sus2,
