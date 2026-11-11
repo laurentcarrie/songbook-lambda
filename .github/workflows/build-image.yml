@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main
-      - build-image   # TEMPORARY: to try the image from the branch before the merge
     paths:
       - 'band-songbook/src/**'
       - 'band-songbook/Cargo.toml'
