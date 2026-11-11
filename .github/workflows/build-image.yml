@@ -1,0 +1,49 @@
+name: Build the songbook image
+
+# Builds docker/build/Dockerfile (band-songbook + texlive, lilypond, fluidsynth, ffmpeg, fonts, aws, rust) and pushes it to
+# ghcr.io/laurentcarrie/songbook-build: the container of the deploy of the songbook repo and of the tests/publish here.
+# Not the Lambda image (deploy-lambda-docker.yml).
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'band-songbook/src/**'
+      - 'band-songbook/Cargo.toml'
+      - 'band-songbook/fonts/**'
+      - 'docker/build/**'
+      - '.github/workflows/build-image.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --provenance=false: a plain image manifest.
+      # UBUNTU_MIRROR: on the ubuntu-26.04 runner archive.ubuntu.com, security.ubuntu.com and azure.archive.ubuntu.com
+      # do not resolve (in the build containers: "Temporary failure resolving"; on the host too: the apt installs of
+      # the other workflows crawl and fail), mirrors.kernel.org does and carries the noble and noble-security pockets.
+      - name: Build and push
+        run: |
+          docker buildx build --provenance=false --sbom=false --push \
+            -f docker/build/Dockerfile \
+            --build-arg UBUNTU_MIRROR=http://mirrors.kernel.org/ubuntu \
+            -t ghcr.io/laurentcarrie/songbook-build:latest \
+            -t ghcr.io/laurentcarrie/songbook-build:${{ github.sha }} \
+            .

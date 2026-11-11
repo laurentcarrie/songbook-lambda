@@ -1,0 +1,6 @@
+# The build context is the root of the repo: send only what docker/build/Dockerfile copies.
+*
+!band-songbook/Cargo.toml
+!band-songbook/src
+!band-songbook/fonts
+!docker/build/texmf
