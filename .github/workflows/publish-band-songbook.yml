@@ -20,23 +20,23 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The image of docker/build (build-image.yml): rust, texlive, lilypond, ffmpeg, fluidsynth, the fonts. Not an apt
+    # install on the runner: on the ubuntu-26.04 runner apt cannot resolve the Ubuntu mirrors, the install crawled for
+    # 45 minutes and failed.
+    container:
+      image: ghcr.io/laurentcarrie/songbook-build:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install LaTeX and LilyPond
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y texlive-luatex texlive-latex-extra lilypond ffmpeg
 
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
+            /usr/local/cargo/registry
+            /usr/local/cargo/git
             band-songbook/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
