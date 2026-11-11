@@ -46,9 +46,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          # No provenance/sbom attestations: they make buildx push an OCI index (image + attestation manifests),
+          # which Lambda refuses ("The image manifest, config or layer media type ... is not supported").
+          docker buildx build --platform linux/amd64 --provenance=false --sbom=false --push \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
       - name: Update Lambda function
         env:
