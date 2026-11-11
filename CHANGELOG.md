@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.50]
+
+### Fixed
+- Five chord macros of `chords.tex` (`Gm7`, `G♭m7`, `G♯m7`, `Gm9`, `Gm6`) wrote `\ ~`, a TeX control-space, instead of `\char92  ~`: the glyph was not drawn. Found by `make chords-pdf`.
+
 ### Added
 - `make chords-pdf` (in `band-songbook`): `sandbox/chords/chords.pdf`, every chord of `chords.tex`: a table per accidental (natural, flat, sharp), a row per letter A..G, a column per kind of chord. Built by `tools/chords_sheet.py`, which lists in an "others" table a chord macro it does not know
 
